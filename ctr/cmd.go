@@ -71,5 +71,5 @@ func (c *cmd) setCmd(attach bool) {
 	}
 	cmdArgs = append(cmdArgs, c.m.hash)
 	cmdArgs = append(cmdArgs, c.arg...)
-	c.Buffer = c.m.ctrm.Command(command.WithoutEnv(c.ctx), cmdArgs...)
+	c.Buffer = c.m.Machine.Command(command.WithoutEnv(c.ctx), cmdArgs...)
 }

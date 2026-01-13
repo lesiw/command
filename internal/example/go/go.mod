@@ -22,7 +22,7 @@ require (
 	lesiw.io/plscheck v0.20.0 // indirect
 	lesiw.io/prefix v0.1.0 // indirect
 	lesiw.io/tidytypes v0.2.0 // indirect
-	lesiw.io/zeros v0.2.0 // indirect
+	lesiw.io/zeros v0.3.0 // indirect
 )
 
 replace lesiw.io/command => ../../..

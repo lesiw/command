@@ -1,6 +1,7 @@
 package ctr
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -95,5 +96,36 @@ func TestMachineNoContainerCLI(t *testing.T) {
 	want := "no container CLI found"
 	if !strings.Contains(err.Error(), want) {
 		t.Errorf("command.Call error: got %v, want %q", err, want)
+	}
+}
+
+func TestMachineShutdownBeforeInit(t *testing.T) {
+	m := new(mock.Machine)
+	ctr := Machine(m, "alpine")
+
+	if err := command.Shutdown(t.Context(), ctr); err != nil {
+		t.Fatalf("command.Shutdown error: %v", err)
+	}
+
+	err := command.Do(t.Context(), ctr, "true")
+	if !errors.Is(err, errShutdown) {
+		t.Errorf("command.Do after Shutdown: got %v, want errShutdown", err)
+	}
+}
+
+func TestMachineCommandAfterShutdown(t *testing.T) {
+	m := new(mock.Machine)
+	m.Return(strings.NewReader("abc123"), "docker", "container", "run")
+	ctr := Machine(m, "alpine")
+
+	if err := command.Do(t.Context(), ctr, "true"); err != nil {
+		t.Fatalf("command.Do error: %v", err)
+	}
+	if err := command.Shutdown(t.Context(), ctr); err != nil {
+		t.Fatalf("command.Shutdown error: %v", err)
+	}
+	err := command.Do(t.Context(), ctr, "true")
+	if !errors.Is(err, errShutdown) {
+		t.Errorf("command.Do after Shutdown: got %v, want errShutdown", err)
 	}
 }

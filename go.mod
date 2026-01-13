@@ -15,7 +15,7 @@ require (
 	lesiw.io/plscheck v0.20.0
 	lesiw.io/prefix v0.1.0
 	lesiw.io/tidytypes v0.2.0
-	lesiw.io/zeros v0.2.0
+	lesiw.io/zeros v0.3.0
 )
 
 require (

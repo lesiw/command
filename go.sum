@@ -31,5 +31,5 @@ lesiw.io/prefix v0.1.0 h1:2Ors12avAiADgMbsQHh27wQmoSI+4aZSW2uTBdDmIZg=
 lesiw.io/prefix v0.1.0/go.mod h1:yrUaJpvikavNodwcL64crLnSf3t1NWeNi/vNu5hUi2Y=
 lesiw.io/tidytypes v0.2.0 h1:U/MI+Cwm5ShPEBEnKuVHtyU7o46gW4zPUojBUhd+/YM=
 lesiw.io/tidytypes v0.2.0/go.mod h1:RiOthB+QiQSCAwPA7SyTO86XN/crZekhwDCfAUivIcA=
-lesiw.io/zeros v0.2.0 h1:HGbTv+iNxt2WTUMBR1VbTw+6Qn8XXKZ1hYx9+5DzOnE=
-lesiw.io/zeros v0.2.0/go.mod h1:KTTwOIVEfcHQEnbDnBdLWJJdYG8+GrE3oGvMhPgsieA=
+lesiw.io/zeros v0.3.0 h1:JtGmWqfNilTK8hm3UGi1TpnKIuLpXbiOEUNuZpBVFzQ=
+lesiw.io/zeros v0.3.0/go.mod h1:KTTwOIVEfcHQEnbDnBdLWJJdYG8+GrE3oGvMhPgsieA=

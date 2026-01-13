@@ -5,6 +5,7 @@ package ctr
 import (
 	"context"
 	"crypto/sha1"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -15,14 +16,19 @@ import (
 
 	"lesiw.io/command"
 	"lesiw.io/command/sub"
+	"lesiw.io/zeros"
 )
 
-var clis = [...][]string{
-	{"docker"},
-	{"podman"},
-	{"nerdctl"},
-	{"lima", "nerdctl"},
-}
+var (
+	clis = [...][]string{
+		{"docker"},
+		{"podman"},
+		{"nerdctl"},
+		{"lima", "nerdctl"},
+	}
+
+	errShutdown = errors.New("machine shut down")
+)
 
 // Machine instantiates a command.Machine that runs commands in a container.
 //
@@ -40,78 +46,94 @@ var clis = [...][]string{
 func Machine(
 	m command.Machine, name string, args ...string,
 ) command.Machine {
-	return &machine{
-		host: m,
-		name: name,
-		args: args,
-	}
+	return &machine{host: m, name: name, args: args}
 }
 
 type machine struct {
-	ctrm command.Machine
+	sync.RWMutex
+	command.Machine
 	host command.Machine
 	name string
 	args []string
-	once sync.Once
+	once zeros.OnceValue[error]
 	hash string
-	err  error
+	done bool
 }
 
 func (m *machine) init(ctx context.Context) error {
-	m.once.Do(func() {
-		var ctrcli []string
-		for _, cli := range clis {
-			testArgs := append([]string(nil), cli...)
-			testArgs = append(testArgs, "--version")
-			_, err := command.Read(ctx, m.host, testArgs...)
-			if !command.NotFound(err) {
-				ctrcli = cli
-				break
-			}
-		}
-		if len(ctrcli) == 0 {
-			m.err = fmt.Errorf("no container CLI found: %v", clis)
-			return
-		}
+	m.Lock()
+	defer m.Unlock()
 
-		m.ctrm = sub.Machine(m.host, ctrcli...)
+	if m.done {
+		return errShutdown
+	}
 
-		// Build container if path provided.
-		name := m.name
-		if len(name) > 0 && (name[0] == '/' || name[0] == '.') {
-			var err error
-			if name, err = buildContainer(ctx, m.ctrm, name); err != nil {
-				m.err = fmt.Errorf("failed to build container: %w", err)
-				return
-			}
+	return m.once.Do(func() error { return m.doInit(ctx) })
+}
+
+func (m *machine) doInit(ctx context.Context) error {
+	var ctrcli []string
+	for _, cli := range clis {
+		testArgs := append([]string(nil), cli...)
+		testArgs = append(testArgs, "--version")
+		_, err := command.Read(ctx, m.host, testArgs...)
+		if !command.NotFound(err) {
+			ctrcli = cli
+			break
 		}
+	}
+	if len(ctrcli) == 0 {
+		return fmt.Errorf("no container CLI found: %v", clis)
+	}
 
-		// Start container.
-		cmd := []string{"container", "run", "--rm", "-d", "-i"}
-		cmd = append(cmd, m.args...)
-		cmd = append(cmd, name, "cat")
-		out, err := command.Read(ctx, m.ctrm, cmd...)
-		if err != nil {
-			m.err = fmt.Errorf("failed to start container: %w", err)
-			return
+	m.Machine = sub.Machine(m.host, ctrcli...)
+
+	// Build container if path provided.
+	name := m.name
+	if len(name) > 0 && (name[0] == '/' || name[0] == '.') {
+		var err error
+		if name, err = buildContainer(ctx, m.Machine, name); err != nil {
+			return fmt.Errorf("failed to build container: %w", err)
 		}
+	}
 
-		m.hash = strings.TrimSpace(string(out))
-	})
-	return m.err
+	// Start container.
+	cmd := []string{"container", "run", "--rm", "-d", "-i"}
+	cmd = append(cmd, m.args...)
+	cmd = append(cmd, name, "cat")
+	out, err := command.Read(ctx, m.Machine, cmd...)
+	if err != nil {
+		return fmt.Errorf("failed to start container: %w", err)
+	}
+
+	m.hash = strings.TrimSpace(string(out))
+	return nil
 }
 
 func (m *machine) Command(ctx context.Context, arg ...string) command.Buffer {
 	if err := m.init(ctx); err != nil {
 		return command.Fail(err)
 	}
+
+	m.RLock()
+	defer m.RUnlock()
+
+	if m.done {
+		return command.Fail(errShutdown)
+	}
+
 	return newCmd(m, ctx, arg...)
 }
 
 var _ command.ShutdownMachine = (*machine)(nil)
 
 func (m *machine) Shutdown(ctx context.Context) error {
-	if m.hash == "" {
+	m.Lock()
+	defer m.Unlock()
+
+	m.done = true
+
+	if m.Machine == nil {
 		return nil
 	}
 
@@ -119,7 +141,7 @@ func (m *machine) Shutdown(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	return command.Do(ctx, m.ctrm, "container", "rm", "-f", m.hash)
+	return command.Do(ctx, m.Machine, "container", "rm", "-f", m.hash)
 }
 
 func buildContainer(
