@@ -69,7 +69,7 @@ func (c *cmd) setCmd(attach bool) {
 	for k, v := range command.Envs(c.ctx) {
 		cmdArgs = append(cmdArgs, "-e", k+"="+v)
 	}
-	cmdArgs = append(cmdArgs, c.m.hash)
+	cmdArgs = append(cmdArgs, c.m.name)
 	cmdArgs = append(cmdArgs, c.arg...)
 	c.Buffer = c.m.Machine.Command(command.WithoutEnv(c.ctx), cmdArgs...)
 }

@@ -116,6 +116,22 @@ func TestMachineShutdown(t *testing.T) {
 	}
 }
 
+func TestMachineUsesRunningContainer(t *testing.T) {
+	m := new(mock.Machine)
+	m.Return(strings.NewReader("abc123"), "docker", "container", "inspect")
+	ctr := Machine(m, "abc123")
+
+	if err := command.Do(t.Context(), ctr, "true"); err != nil {
+		t.Fatalf("command.Do error: %v", err)
+	}
+
+	calls := mock.Calls(m)
+	want := []string{"container", "exec", "-i", "abc123", "true"}
+	if !callSuffix(calls, want) {
+		t.Errorf("calls:\n%+v\nwant call ending with: %v", calls, want)
+	}
+}
+
 func TestMachineShutdownBeforeInit(t *testing.T) {
 	m := new(mock.Machine)
 	ctr := Machine(m, "alpine")

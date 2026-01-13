@@ -95,10 +95,9 @@ type machine struct {
 	sync.RWMutex
 	command.Machine
 	host command.Machine
-	name string
+	name string // ID, path, or image pre-init; ID post-init.
 	args []string
 	once zeros.OnceValue[error]
-	hash string
 	done bool
 }
 
@@ -116,25 +115,36 @@ func (m *machine) init(ctx context.Context) error {
 func (m *machine) doInit(ctx context.Context) error {
 	m.Machine = Ctl(m.host)
 
-	// Build container if path provided.
-	name := m.name
-	if len(name) > 0 && (name[0] == '/' || name[0] == '.') {
+	// If name is an existing container ID, use that.
+	if len(m.name) > 0 && m.name[0] != '/' && m.name[0] != '.' {
+		out, err := command.Read(ctx, m.Machine,
+			"container", "inspect",
+			"--format", "{{.ID}}",
+			m.name,
+		)
+		if err == nil && strings.TrimSpace(out) != "" {
+			return nil
+		}
+	}
+
+	// If name is a path, build the Containerfile at that path.
+	if len(m.name) > 0 && (m.name[0] == '/' || m.name[0] == '.') {
 		var err error
-		if name, err = buildContainer(ctx, m.Machine, name); err != nil {
+		if m.name, err = buildContainer(ctx, m.Machine, m.name); err != nil {
 			return fmt.Errorf("failed to build container: %w", err)
 		}
 	}
 
-	// Start container.
+	// Otherwise, name is an image. Start that image.
 	cmd := []string{"container", "run", "--rm", "-d", "-i"}
 	cmd = append(cmd, m.args...)
-	cmd = append(cmd, name, "cat")
+	cmd = append(cmd, m.name, "cat")
 	out, err := command.Read(ctx, m.Machine, cmd...)
 	if err != nil {
 		return fmt.Errorf("failed to start container: %w", err)
 	}
 
-	m.hash = strings.TrimSpace(string(out))
+	m.name = strings.TrimSpace(string(out))
 	return nil
 }
 
@@ -169,7 +179,7 @@ func (m *machine) Shutdown(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	return command.Do(ctx, m.Machine, "container", "rm", "-f", m.hash)
+	return command.Do(ctx, m.Machine, "container", "rm", "-f", m.name)
 }
 
 func buildContainer(
