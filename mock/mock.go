@@ -324,6 +324,7 @@ func (m *Machine) Command(ctx context.Context, args ...string) command.Buffer {
 
 type mockCmd struct {
 	sync.Mutex
+	once       sync.Once
 	machine    *Machine
 	call       Call
 	reader     io.Reader
@@ -331,7 +332,6 @@ type mockCmd struct {
 	key        string
 	input      []byte
 	callIndex  int
-	recorded   bool
 }
 
 func (c *mockCmd) Read(p []byte) (n int, err error) {
@@ -368,27 +368,18 @@ func (c *mockCmd) recordCall() {
 		c.call.Got = append([]byte{}, c.input...)
 	}
 	call := c.call
-	if c.recorded {
-		callIndex := c.callIndex
-		c.Unlock()
-
-		c.machine.mu.Lock()
-		c.machine.Calls[callIndex] = call
-		c.machine.mu.Unlock()
-		return
-	}
-
-	c.recorded = true
 	c.Unlock()
+
+	c.once.Do(func() {
+		c.machine.mu.Lock()
+		c.machine.Calls = append(c.machine.Calls, Call{})
+		c.callIndex = len(c.machine.Calls) - 1
+		c.machine.mu.Unlock()
+	})
 
 	c.machine.mu.Lock()
-	c.machine.Calls = append(c.machine.Calls, call)
-	callIndex := len(c.machine.Calls) - 1
+	c.machine.Calls[c.callIndex] = call
 	c.machine.mu.Unlock()
-
-	c.Lock()
-	c.callIndex = callIndex
-	c.Unlock()
 }
 
 // Calls returns invocations tracked by m, or nil if m is not a mock.Machine.

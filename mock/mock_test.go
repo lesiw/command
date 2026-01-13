@@ -498,3 +498,16 @@ func TestMachineErrorPreservation(t *testing.T) {
 		t.Errorf("repeat error = %q, want %q", got, want)
 	}
 }
+
+//ignore:errcheck
+func TestMachineConcurrentRecordCall(t *testing.T) {
+	for range 1000 {
+		m := new(mock.Machine)
+		m.Return(strings.NewReader("x"), "cmd")
+		command.Copy(
+			io.Discard,
+			strings.NewReader("x"),
+			command.NewStream(t.Context(), m, "cmd"),
+		)
+	}
+}
