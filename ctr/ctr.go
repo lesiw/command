@@ -30,6 +30,48 @@ var (
 	errShutdown = errors.New("machine shut down")
 )
 
+type ctlMachine struct {
+	host command.Machine
+	once zeros.OnceValues[command.Machine, error]
+}
+
+// Ctl returns a Machine for the controller CLI (docker, podman, etc.)
+// found on the given Machine.
+//
+//	ctl := ctr.Ctl(sys.Machine())
+//	ctl.Command(ctx, "run", "-ti", "alpine", "sh")
+func Ctl(m command.Machine) command.Machine { return &ctlMachine{host: m} }
+
+func (m *ctlMachine) init(ctx context.Context) (command.Machine, error) {
+	return m.once.Do(func() (command.Machine, error) { return m.doInit(ctx) })
+}
+
+func (m *ctlMachine) doInit(ctx context.Context) (command.Machine, error) {
+	var ctrcli []string
+	for _, cli := range clis {
+		args := append([]string{}, cli...)
+		args = append(args, "--version")
+		if !command.NotFound(command.Do(ctx, m.host, args...)) {
+			ctrcli = cli
+			break
+		}
+	}
+	if len(ctrcli) == 0 {
+		return nil, fmt.Errorf("no container CLI found: %v", clis)
+	}
+	return sub.Machine(m.host, ctrcli...), nil
+}
+
+func (m *ctlMachine) Command(
+	ctx context.Context, arg ...string,
+) command.Buffer {
+	ctl, err := m.init(ctx)
+	if err != nil {
+		return command.Fail(err)
+	}
+	return ctl.Command(ctx, arg...)
+}
+
 // Machine instantiates a command.Machine that runs commands in a container.
 //
 // If name begins with / or ., it is treated as a path to a Containerfile
@@ -72,21 +114,7 @@ func (m *machine) init(ctx context.Context) error {
 }
 
 func (m *machine) doInit(ctx context.Context) error {
-	var ctrcli []string
-	for _, cli := range clis {
-		testArgs := append([]string(nil), cli...)
-		testArgs = append(testArgs, "--version")
-		_, err := command.Read(ctx, m.host, testArgs...)
-		if !command.NotFound(err) {
-			ctrcli = cli
-			break
-		}
-	}
-	if len(ctrcli) == 0 {
-		return fmt.Errorf("no container CLI found: %v", clis)
-	}
-
-	m.Machine = sub.Machine(m.host, ctrcli...)
+	m.Machine = Ctl(m.host)
 
 	// Build container if path provided.
 	name := m.name
