@@ -1,6 +1,16 @@
 package command
 
-import "io"
+import (
+	"errors"
+	"io"
+)
+
+// ErrClosed is returned when attempting to read from or write to a closed
+// reader or writer.
+var ErrClosed = errors.New("command: write to closed buffer")
+
+// ErrReadOnly is returned when attempting to write to a read-only command.
+var ErrReadOnly = errors.New("command: write to read-only buffer")
 
 // Buffer represents a command's execution.
 // Buffers provide read access to command output.
