@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"unicode"
 
 	"lesiw.io/fs"
 )
@@ -110,7 +109,7 @@ func Exec(ctx context.Context, m Machine, args ...string) error {
 }
 
 // Read executes a command and returns its output as a string.
-// All trailing whitespace is stripped from the output.
+// Trailing newlines are stripped from the output.
 // For exact output, use [io.ReadAll].
 //
 // If the command fails, the error will contain an exit code and log output.
@@ -125,10 +124,10 @@ func Read(ctx context.Context, m Machine, args ...string) (string, error) {
 	trace(r)
 	out, err := io.ReadAll(r)
 
-	// Convert to string then strip trailing whitespace
+	// Convert to string then strip trailing newlines
 	// (like shell $() behavior)
 	result := string(out)
-	result = strings.TrimRightFunc(result, unicode.IsSpace)
+	result = strings.TrimRight(result, "\r\n")
 
 	if e := new(Error); err != nil && buf.Len() > 0 && errors.As(err, &e) {
 		e.Log = buf.Bytes()
