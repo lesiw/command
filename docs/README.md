@@ -48,7 +48,7 @@ Or pipe multiple stages together:
 err := command.Copy(
     command.NewWriter(ctx, m, "transform"),
     command.NewReader(ctx, m, "generate"),
-    command.NewStream(ctx, m, "filter"),
+    command.NewFilter(ctx, m, "filter"),
 )
 if err != nil {
     log.Fatal(err)

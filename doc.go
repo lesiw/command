@@ -39,7 +39,7 @@
 // [Copy] is a generalization of [io.Copy],
 // allowing three or more buffers to be piped together.
 // Commands in the middle of the [Copy] must be [io.ReadWriter].
-// [NewStream] to returns an [io.ReadWriteCloser] for piping.
+// [NewFilter] returns an [io.ReadWriteCloser] for piping.
 //
 // Helpers are available for common buffer operations.
 // [Do] creates and executes a [Buffer], discarding its output to [io.Discard].

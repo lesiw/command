@@ -75,7 +75,7 @@ type ShutdownMachine interface {
 
 	// Shutdown releases any resources held by the machine.
 	//
-	// The context passed to Shutdown may lack cancelation, as the
+	// The context passed to Shutdown may lack cancellation, as the
 	// command.Shutdown helper derives a context using context.WithoutCancel
 	// to ensure cleanup can complete even after the parent context is
 	// canceled.

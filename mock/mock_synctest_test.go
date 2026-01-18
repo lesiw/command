@@ -20,7 +20,7 @@ func TestMachineConcurrentPipeline(t *testing.T) {
 		var result strings.Builder
 		if _, err := command.Copy(&result,
 			strings.NewReader("input\n"),
-			command.NewStream(ctx, m, "filter"),
+			command.NewFilter(ctx, m, "filter"),
 		); err != nil {
 			t.Fatal(err)
 		}

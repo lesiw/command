@@ -53,13 +53,13 @@ func TestCopySuccessNoError(t *testing.T) {
 	var buf bytes.Buffer
 	src := strings.NewReader("data")
 	pr, pw := io.Pipe()
-	mid := struct {
+	fil := struct {
 		io.Reader
 		io.Writer
 		io.Closer
 	}{pr, pw, pw}
 
-	n, err := Copy(&buf, src, mid)
+	n, err := Copy(&buf, src, fil)
 	if err != nil {
 		t.Errorf("Copy() error = %v, want nil", err)
 	}

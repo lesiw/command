@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-// NewStream creates a bidirectional command stream with full
+// NewFilter creates a bidirectional command filter with full
 // Read/Write/Close access.
 //
 // The returned io.ReadWriteCloser provides direct access to the command's
@@ -15,33 +15,36 @@ import (
 // will return an error. Close() closes stdin if supported, otherwise it is
 // a no-op.
 //
-// NewStream is primarily useful with command.Copy for pipeline composition.
+// NewFilter is primarily useful with command.Copy for pipeline composition.
 // For most use cases, prefer NewReader (read-only with cancellation) or
 // NewWriter (write-only with completion wait).
-func NewStream(
+func NewFilter(
 	ctx context.Context, m Machine, args ...string,
 ) io.ReadWriteCloser {
 	buf := m.Command(ctx, args...)
-	return &stream{buf: buf}
+	return &filter{buf: buf}
 }
 
-type stream struct {
+// Deprecated: Use NewFilter instead.
+var NewStream = NewFilter
+
+type filter struct {
 	buf Buffer
 }
 
-func (s *stream) Read(p []byte) (int, error) {
-	return s.buf.Read(p)
+func (f *filter) Read(p []byte) (int, error) {
+	return f.buf.Read(p)
 }
 
-func (s *stream) Write(p []byte) (int, error) {
-	if wb, ok := s.buf.(WriteBuffer); ok {
+func (f *filter) Write(p []byte) (int, error) {
+	if wb, ok := f.buf.(WriteBuffer); ok {
 		return wb.Write(p)
 	}
 	return 0, ErrReadOnly
 }
 
-func (s *stream) Close() error {
-	if wb, ok := s.buf.(WriteBuffer); ok {
+func (f *filter) Close() error {
+	if wb, ok := f.buf.(WriteBuffer); ok {
 		return wb.Close()
 	}
 	// Read-only commands - Close is a no-op
@@ -51,8 +54,8 @@ func (s *stream) Close() error {
 // ReadFrom implements io.ReaderFrom for optimized copying that auto-closes
 // stdin when the source reaches EOF.
 // This allows io.Copy to automatically close stdin in pipeline stages.
-func (s *stream) ReadFrom(src io.Reader) (n int64, err error) {
-	wb, ok := s.buf.(WriteBuffer)
+func (f *filter) ReadFrom(src io.Reader) (n int64, err error) {
+	wb, ok := f.buf.(WriteBuffer)
 	if !ok {
 		return 0, ErrReadOnly
 	}

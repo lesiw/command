@@ -357,7 +357,7 @@ func ExampleSh_FS_workflow() {
 	_, err = command.Copy(
 		&buf,
 		strings.NewReader(string(input)),
-		sh.NewStream(ctx, "tr", "A-Z", "a-z"),
+		sh.NewFilter(ctx, "tr", "A-Z", "a-z"),
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -392,7 +392,7 @@ func ExampleSh_Command() {
 	_, err := command.Copy(
 		&buf,
 		strings.NewReader("hello world"),
-		sh.NewStream(ctx, "tr", "a-z", "A-Z"),
+		sh.NewFilter(ctx, "tr", "a-z", "A-Z"),
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -410,7 +410,7 @@ func ExampleSh_Unshell() {
 	_, err := command.Copy(
 		&buf,
 		strings.NewReader("hello"),
-		sh.NewStream(ctx, "tr", "a-z", "A-Z"),
+		sh.NewFilter(ctx, "tr", "a-z", "A-Z"),
 	)
 	if err != nil {
 		log.Fatal(err)

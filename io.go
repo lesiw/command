@@ -21,17 +21,17 @@ var (
 	stderr io.Writer = os.Stderr
 )
 
-// Copy copies the output of each stream into the input of the next stream.
+// Copy copies the output of each filter into the input of the next filter.
 //
 // Copy uses io.Copy internally, which automatically optimizes for
 // io.ReaderFrom and io.WriterTo implementations. When using NewWriter(),
 // its io.ReaderFrom implementation will automatically close stdin after
 // copying.
 //
-// The mid stages must be both readable and writable (io.ReadWriter). Use
-// NewStream() to wrap Buffer instances for use in pipelines.
+// The fil stages must be both readable and writable (io.ReadWriter). Use
+// NewFilter() to wrap Buffer instances for use in pipelines.
 func Copy(
-	dst io.Writer, src io.Reader, mid ...io.ReadWriter,
+	dst io.Writer, src io.Reader, fil ...io.ReadWriter,
 ) (written int64, err error) {
 	var (
 		g errgroup.Group
@@ -42,7 +42,7 @@ func Copy(
 		total = make(chan int64)
 	)
 
-	results := &copyError{results: make([]copyResult, len(mid)+1)}
+	results := &copyError{results: make([]copyResult, len(fil)+1)}
 
 	go func() {
 		var written int64
@@ -52,16 +52,16 @@ func Copy(
 		total <- written
 	}()
 
-	for i := -1; i < len(mid); i++ {
+	for i := -1; i < len(fil); i++ {
 		if i < 0 {
 			r = src
 		} else {
-			r = mid[i]
+			r = fil[i]
 		}
-		if i == len(mid)-1 {
+		if i == len(fil)-1 {
 			w = dst
 		} else {
-			w = mid[i+1]
+			w = fil[i+1]
 		}
 		i := i
 		w := w

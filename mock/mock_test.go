@@ -96,7 +96,7 @@ func TestMachineTracksInput(t *testing.T) {
 	m, ctx := new(mock.Machine), context.Background()
 	m.Return(strings.NewReader("echoed\n"), "tee")
 
-	cmd := command.NewStream(ctx, m, "tee", "output.txt")
+	cmd := command.NewFilter(ctx, m, "tee", "output.txt")
 	if _, err := cmd.Write([]byte("test input")); err != nil {
 		t.Fatal(err)
 	}
@@ -197,7 +197,7 @@ func TestMachineInputCapture(t *testing.T) {
 	m, ctx := new(mock.Machine), context.Background()
 	m.Return(strings.NewReader("output"), "cmd")
 
-	cmd := command.NewStream(ctx, m, "cmd", "arg")
+	cmd := command.NewFilter(ctx, m, "cmd", "arg")
 	if _, err := cmd.Write([]byte("input data")); err != nil {
 		t.Fatal(err)
 	}
@@ -507,7 +507,7 @@ func TestMachineConcurrentRecordCall(t *testing.T) {
 		command.Copy(
 			io.Discard,
 			strings.NewReader("x"),
-			command.NewStream(t.Context(), m, "cmd"),
+			command.NewFilter(t.Context(), m, "cmd"),
 		)
 	}
 }

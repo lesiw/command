@@ -38,6 +38,27 @@ func (sh *Sh) Exec(
 	return Exec(ctx, sh, args...)
 }
 
+// NewFilter creates a bidirectional command filter with full
+// Read/Write/Close access.
+//
+// The returned io.ReadWriteCloser provides direct access to the command's
+// stdin (Write), stdout (Read), and stdin close signal (Close).
+//
+// If the underlying command does not support writing (is read-only), Write()
+// will return an error. Close() closes stdin if supported, otherwise it is
+// a no-op.
+//
+// NewFilter is primarily useful with command.Copy for pipeline composition.
+// For most use cases, prefer NewReader (read-only with cancellation) or
+// NewWriter (write-only with completion wait).
+//
+// This is a convenience method that calls [NewFilter].
+func (sh *Sh) NewFilter(
+	ctx context.Context, args ...string,
+) io.ReadWriteCloser {
+	return NewFilter(ctx, sh, args...)
+}
+
 // NewReader creates a read-only command that cancels on Close.
 //
 // The command starts lazily on the first Read() call. Close() cancels
@@ -52,27 +73,6 @@ func (sh *Sh) NewReader(
 	ctx context.Context, args ...string,
 ) io.ReadCloser {
 	return NewReader(ctx, sh, args...)
-}
-
-// NewStream creates a bidirectional command stream with full
-// Read/Write/Close access.
-//
-// The returned io.ReadWriteCloser provides direct access to the command's
-// stdin (Write), stdout (Read), and stdin close signal (Close).
-//
-// If the underlying command does not support writing (is read-only), Write()
-// will return an error. Close() closes stdin if supported, otherwise it is
-// a no-op.
-//
-// NewStream is primarily useful with command.Copy for pipeline composition.
-// For most use cases, prefer NewReader (read-only with cancellation) or
-// NewWriter (write-only with completion wait).
-//
-// This is a convenience method that calls [NewStream].
-func (sh *Sh) NewStream(
-	ctx context.Context, args ...string,
-) io.ReadWriteCloser {
-	return NewStream(ctx, sh, args...)
 }
 
 // NewWriter creates a write-only command that waits for completion on Close.
@@ -95,7 +95,7 @@ func (sh *Sh) NewWriter(
 }
 
 // Read executes a command and returns its output as a string.
-// All trailing whitespace is stripped from the output.
+// Trailing newlines are stripped from the output.
 // For exact output, use [io.ReadAll].
 //
 // If the command fails, the error will contain an exit code and log output.

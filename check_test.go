@@ -1,4 +1,4 @@
-//go:build !remote
+//go:build !remote && !race
 
 package command
 

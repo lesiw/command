@@ -115,7 +115,7 @@ func TestCmdLog(t *testing.T) {
 }
 
 func TestCmdClose(t *testing.T) {
-	buf := command.NewStream(t.Context(), alpine(t), "cat")
+	buf := command.NewFilter(t.Context(), alpine(t), "cat")
 
 	if _, err := buf.Write([]byte("test\n")); err != nil {
 		t.Fatalf("buf.Write(%q) err: %v", "test\n", err)

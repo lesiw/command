@@ -303,7 +303,7 @@ func TestMachineStreaming(t *testing.T) {
 
 	_, err = command.Copy(
 		&out, strings.NewReader("hello world"),
-		command.NewStream(t.Context(), sshm, "tr", "a-z", "A-Z"),
+		command.NewFilter(t.Context(), sshm, "tr", "a-z", "A-Z"),
 	)
 	if err != nil {
 		t.Fatalf("Copy failed: %v", err)

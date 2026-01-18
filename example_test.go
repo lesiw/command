@@ -21,7 +21,7 @@ func ExampleCopy() {
 	_, err := command.Copy(
 		&buf,
 		strings.NewReader("hello world"),
-		command.NewStream(ctx, m, "tr", "a-z", "A-Z"),
+		command.NewFilter(ctx, m, "tr", "a-z", "A-Z"),
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -80,7 +80,7 @@ func ExampleShell() {
 	_, err := command.Copy(
 		&buf,
 		strings.NewReader("hello"),
-		command.NewStream(ctx, sh, "tr", "a-z", "A-Z"),
+		command.NewFilter(ctx, sh, "tr", "a-z", "A-Z"),
 	)
 	if err != nil {
 		log.Fatal(err)

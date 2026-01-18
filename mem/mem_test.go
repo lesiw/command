@@ -50,7 +50,7 @@ func TestTee(t *testing.T) {
 		t.Fatalf("MkdirAll failed: %v", err)
 	}
 
-	teeCmd := command.NewStream(ctx, m, "tee", "/tmp/test.txt")
+	teeCmd := command.NewFilter(ctx, m, "tee", "/tmp/test.txt")
 
 	go func() {
 		_, _ = teeCmd.Write([]byte("test content"))

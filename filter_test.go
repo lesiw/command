@@ -9,15 +9,15 @@ import (
 	"lesiw.io/command/mem"
 )
 
-func TestStreamReadFromClosesStdin(t *testing.T) {
+func TestFilterReadFromClosesStdin(t *testing.T) {
 	m, ctx := mem.Machine(), t.Context()
 
 	// Create a command that reads from stdin and writes to stdout
-	stream := command.NewStream(ctx, m, "cat")
+	filter := command.NewFilter(ctx, m, "cat")
 
 	// Use io.Copy which should trigger ReadFrom and auto-close stdin
 	src := strings.NewReader("test data")
-	n, err := io.Copy(stream, src)
+	n, err := io.Copy(filter, src)
 	if err != nil {
 		t.Fatalf("io.Copy() error = %v, want nil", err)
 	}
@@ -27,7 +27,7 @@ func TestStreamReadFromClosesStdin(t *testing.T) {
 
 	// Now read from the command - should get the data and EOF
 	// (indicating stdin was closed properly)
-	buf, err := io.ReadAll(stream)
+	buf, err := io.ReadAll(filter)
 	if err != nil {
 		t.Fatalf("io.ReadAll() error = %v, want nil", err)
 	}
