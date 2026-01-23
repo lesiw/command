@@ -63,13 +63,15 @@ func (c *cmd) setCmd(attach bool) {
 		// Unattached commands should not probe stdin/stdout.
 		cmdArgs = append(cmdArgs, "-i")
 	}
-	if dir := fs.WorkDir(c.ctx); dir != "" && path.IsAbs(dir) {
+	ctx := c.ctx
+	if dir := fs.WorkDir(ctx); dir != "" && path.IsAbs(dir) {
 		cmdArgs = append(cmdArgs, "-w", dir)
+		ctx = fs.WithWorkDir(ctx, "")
 	}
-	for k, v := range command.Envs(c.ctx) {
+	for k, v := range command.Envs(ctx) {
 		cmdArgs = append(cmdArgs, "-e", k+"="+v)
 	}
 	cmdArgs = append(cmdArgs, c.m.name)
 	cmdArgs = append(cmdArgs, c.arg...)
-	c.Buffer = c.m.Machine.Command(command.WithoutEnv(c.ctx), cmdArgs...)
+	c.Buffer = c.m.Machine.Command(command.WithoutEnv(ctx), cmdArgs...)
 }

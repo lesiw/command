@@ -11,6 +11,7 @@ import (
 
 	"lesiw.io/command"
 	"lesiw.io/command/sub"
+	"lesiw.io/fs"
 )
 
 // Machine creates a command.Machine that executes commands over SSH.
@@ -51,6 +52,14 @@ func (sm *machine) Command(
 	ctx context.Context, args ...string,
 ) command.Buffer {
 	sm.init(ctx)
+
+	if dir := fs.WorkDir(ctx); dir != "" {
+		// Use POSIX sh to change directory before executing.
+		// The exec "$@" preserves argument boundaries correctly.
+		cmdStr := "cd " + dir + " && exec \"$@\""
+		args = append([]string{"sh", "-c", cmdStr, "sh"}, args...)
+		ctx = fs.WithWorkDir(ctx, "")
+	}
 
 	env := command.Envs(ctx)
 	if len(env) > 0 {

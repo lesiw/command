@@ -18,6 +18,7 @@ import (
 	"lesiw.io/command/internal/sh"
 	"lesiw.io/fs"
 	"lesiw.io/fs/osfs"
+	"lesiw.io/fs/path"
 )
 
 var (
@@ -107,12 +108,17 @@ func newCmd(ctx context.Context, args ...string) command.Buffer {
 	c.cmd = exec.CommandContext(ctx, args[0], args[1:]...)
 	c.env = command.Envs(ctx)
 
-	// Set working directory if specified in context
-	// Only use absolute paths - relative paths resolved by command.FS
-	if dir := fs.WorkDir(ctx); dir != "" && filepath.IsAbs(dir) {
-		c.cmd.Dir = dir
+	dir := fs.WorkDir(ctx)
+	if dir != "" && !path.IsAbs(dir) {
+		var err error
+		dir, err = filepath.Localize(dir)
+		if err != nil {
+			return command.Fail(
+				fmt.Errorf("workdir localization failed: %w", err),
+			)
+		}
 	}
-
+	c.cmd.Dir = dir
 	c.cmd.Env = os.Environ()
 	for k, v := range c.env {
 		c.cmd.Env = append(c.cmd.Env, k+"="+v)
