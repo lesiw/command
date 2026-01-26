@@ -23,15 +23,7 @@ func TestWorkDirRelative(t *testing.T) {
 		t.Fatalf("mkdir: %v", err)
 	}
 
-	origDir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("getwd: %v", err)
-	}
-	defer os.Chdir(origDir)
-
-	if err := os.Chdir(tmpDir); err != nil {
-		t.Fatalf("chdir: %v", err)
-	}
+	t.Chdir(tmpDir)
 
 	ctx = fs.WithWorkDir(ctx, "subdir")
 	out, err := command.Read(ctx, m, "pwd")
