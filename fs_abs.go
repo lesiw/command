@@ -24,6 +24,7 @@ func abs(
 	// Join with WorkDir if provided and path is relative.
 	if workDir := fs.WorkDir(ctx); workDir != "" && !path.IsAbs(name) {
 		name = path.Join(workDir, name)
+		ctx = fs.WithWorkDir(ctx, "")
 	}
 
 	// Localize the path (lexical operation).
