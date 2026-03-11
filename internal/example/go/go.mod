@@ -5,7 +5,7 @@ go 1.25
 require (
 	lesiw.io/command v0.0.0
 	lesiw.io/defers v0.9.0
-	lesiw.io/fs v0.5.0
+	lesiw.io/fs v0.7.0
 )
 
 require (

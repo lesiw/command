@@ -10,7 +10,7 @@ require (
 	golang.org/x/tools v0.39.0
 	lesiw.io/checker v0.12.0
 	lesiw.io/errcheck v1.0.0
-	lesiw.io/fs v0.5.0
+	lesiw.io/fs v0.7.0
 	lesiw.io/linelen v0.2.0
 	lesiw.io/plscheck v0.20.0
 	lesiw.io/prefix v0.1.0
