@@ -4,12 +4,76 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"time"
 
 	"lesiw.io/command"
 	"lesiw.io/command/ctr"
 	"lesiw.io/command/mock"
 	"lesiw.io/command/sys"
 )
+
+// sshMachine returns an ssh.Machine connected to an SSH container on
+// localhost:2222. If no container is reachable, one is started and torn
+// down at test end. An already-running container is reused (without
+// cleanup) so concurrent fuzz workers share a single container.
+// Tests are skipped when sshpass is unavailable.
+func sshMachine(tb testing.TB) command.Machine {
+	tb.Helper()
+	err := command.Do(tb.Context(), sys.Machine(), "sshpass", "--version")
+	if command.NotFound(err) {
+		tb.Skip("sshpass not available")
+	}
+	err = command.Do(tb.Context(), sys.Machine(),
+		"sshpass", "-p", "test",
+		"ssh",
+		"-o", "StrictHostKeyChecking=no",
+		"-o", "UserKnownHostsFile=/dev/null",
+		"-o", "ConnectTimeout=1",
+		"-p", "2222",
+		"testuser@localhost", "echo", "ready",
+	)
+	if err != nil {
+		ctr := ctr.Machine(sys.Machine(),
+			"lscr.io/linuxserver/openssh-server:latest",
+			"-e", "PASSWORD_ACCESS=true",
+			"-e", "USER_PASSWORD=test",
+			"-e", "USER_NAME=testuser",
+			"-p", "2222:2222",
+		)
+		tb.Cleanup(func() { _ = command.Shutdown(tb.Context(), ctr) })
+		err := command.Do(tb.Context(), ctr, "true")
+		if err != nil {
+			tb.Fatalf("command.Do(true) err: %v", err)
+		}
+		var lastErr error
+		for range 30 {
+			lastErr = command.Do(tb.Context(), sys.Machine(),
+				"sshpass", "-p", "test",
+				"ssh",
+				"-o", "StrictHostKeyChecking=no",
+				"-o", "UserKnownHostsFile=/dev/null",
+				"-o", "ConnectTimeout=1",
+				"-p", "2222",
+				"testuser@localhost", "echo", "ready",
+			)
+			if lastErr == nil {
+				break
+			}
+			time.Sleep(time.Second)
+		}
+		if lastErr != nil {
+			tb.Fatalf("SSH container not ready: %v", lastErr)
+		}
+	}
+	return Machine(sys.Machine(),
+		"sshpass", "-p", "test",
+		"ssh",
+		"-o", "StrictHostKeyChecking=no",
+		"-o", "UserKnownHostsFile=/dev/null",
+		"-p", "2222",
+		"testuser@localhost",
+	)
+}
 
 func TestMachineEnvVars_Unix_Mock(t *testing.T) {
 	testHookOS = func() string { return "linux" }
@@ -126,12 +190,16 @@ func TestMachineNoEnvVars_Mock(t *testing.T) {
 	// Last call should be our command
 	args := calls[len(calls)-1].Args
 
-	// Should just have: user@host echo hello
-	if len(args) != 3 {
-		t.Errorf("expected 3 args, got %v", args)
+	// Should have: user@host <single quoted remote command>
+	if len(args) != 2 {
+		t.Fatalf("expected 2 args, got %v", args)
 	}
-	if args[0] != "user@host" || args[1] != "echo" || args[2] != "hello" {
-		t.Errorf("unexpected args: %v", args)
+	if args[0] != "user@host" {
+		t.Errorf("args[0] = %q, want %q", args[0], "user@host")
+	}
+	want := `sh -c 'exec "$@"' sh echo hello`
+	if args[1] != want {
+		t.Errorf("args[1] = %q, want %q", args[1], want)
 	}
 }
 
@@ -157,9 +225,10 @@ func TestMachineSSHOptions_Mock(t *testing.T) {
 	// Last call should be our command
 	args := calls[len(calls)-1].Args
 
+	// SSH options are passed as separate args, remote command is one string.
 	want := []string{
 		"-p", "2222", "-o", "StrictHostKeyChecking=no",
-		"user@host", "echo", "hello",
+		"user@host", `sh -c 'exec "$@"' sh echo hello`,
 	}
 	if got := len(args); got != len(want) {
 		t.Fatalf("arg count = %d, want %d: %v", got, len(want), args)
@@ -173,143 +242,63 @@ func TestMachineSSHOptions_Mock(t *testing.T) {
 }
 
 func TestMachineRealSSH(t *testing.T) {
-	// Check if sshpass is available
-	_, err := command.Read(
-		t.Context(), sys.Machine(), "sshpass", "--version",
-	)
-	if command.NotFound(err) {
-		t.Skip("sshpass not available")
-	}
-
-	// Start an SSH container using ctr.Machine
-	sshContainer := ctr.Machine(
-		sys.Machine(),
-		"lscr.io/linuxserver/openssh-server:latest",
-		"-e", "PASSWORD_ACCESS=true",
-		"-e", "USER_PASSWORD=test",
-		"-e", "USER_NAME=testuser",
-		"-p", "2222:2222",
-	)
-	t.Cleanup(func() {
-		if err := command.Shutdown(t.Context(), sshContainer); err != nil {
-			t.Logf("Close() error: %v", err)
-		}
-	})
-
-	// Initialize container (triggers lazy start)
-	if _, err := command.Read(t.Context(), sshContainer, "true"); err != nil {
-		t.Fatalf("failed to start container: %v", err)
-	}
-
-	// Wait for SSH to be ready
-	var sshReady bool
-	for range 30 {
-		if _, err := command.Read(t.Context(), sys.Machine(),
-			"sshpass", "-p", "test",
-			"ssh", "-o", "StrictHostKeyChecking=no",
-			"-o", "UserKnownHostsFile=/dev/null",
-			"-o", "ConnectTimeout=1",
-			"-p", "2222",
-			"testuser@localhost", "echo", "ready"); err == nil {
-			sshReady = true
-			break
-		}
-		_, _ = command.Read(t.Context(), sys.Machine(), "sleep", "1")
-	}
-	if !sshReady {
-		t.Skip("SSH container did not become ready in time")
-	}
-
-	// Create ssh.Machine with sshpass for authentication
-	sshm := Machine(sys.Machine(),
-		"sshpass", "-p", "test",
-		"ssh", "-o", "StrictHostKeyChecking=no",
-		"-o", "UserKnownHostsFile=/dev/null",
-		"-p", "2222",
-		"testuser@localhost")
-
-	// Test env var handling
+	sshm := sshMachine(t)
 	ctx := command.WithEnv(t.Context(), map[string]string{
 		"TEST_VAR": "hello_ssh",
 	})
-
 	result, err := command.Read(ctx, sshm, "printenv", "TEST_VAR")
 	if err != nil {
-		t.Fatalf("printenv failed: %v", err)
+		t.Errorf("command.Read(printenv, TEST_VAR) err: %v", err)
 	}
-
 	if result != "hello_ssh" {
-		t.Errorf("expected %q, got %q", "hello_ssh", result)
+		t.Errorf("got %q, want %q", result, "hello_ssh")
 	}
 }
 
 func TestMachineStreaming(t *testing.T) {
-	// Check if sshpass is available
-	_, err := command.Read(
-		t.Context(), sys.Machine(), "sshpass", "--version",
-	)
-	if command.NotFound(err) {
-		t.Skip("sshpass not available")
-	}
-
-	// Start an SSH container
-	sshContainer := ctr.Machine(
-		sys.Machine(),
-		"lscr.io/linuxserver/openssh-server:latest",
-		"-e", "PASSWORD_ACCESS=true",
-		"-e", "USER_PASSWORD=test",
-		"-e", "USER_NAME=testuser",
-		"-p", "2222:2222",
-	)
-	t.Cleanup(func() {
-		if err := command.Shutdown(t.Context(), sshContainer); err != nil {
-			t.Logf("Close() error: %v", err)
-		}
-	})
-
-	// Initialize container (triggers lazy start)
-	if _, err := command.Read(t.Context(), sshContainer, "true"); err != nil {
-		t.Fatalf("failed to start container: %v", err)
-	}
-
-	// Wait for SSH to be ready
-	var sshReady bool
-	for range 30 {
-		if _, err := command.Read(t.Context(), sys.Machine(),
-			"sshpass", "-p", "test",
-			"ssh", "-o", "StrictHostKeyChecking=no",
-			"-o", "UserKnownHostsFile=/dev/null",
-			"-o", "ConnectTimeout=1",
-			"-p", "2222",
-			"testuser@localhost", "echo", "ready"); err == nil {
-			sshReady = true
-			break
-		}
-		_, _ = command.Read(t.Context(), sys.Machine(), "sleep", "1")
-	}
-	if !sshReady {
-		t.Skip("SSH container did not become ready in time")
-	}
-
-	// Create ssh.Machine
-	sshm := Machine(sys.Machine(),
-		"sshpass", "-p", "test",
-		"ssh", "-o", "StrictHostKeyChecking=no",
-		"-o", "UserKnownHostsFile=/dev/null",
-		"-p", "2222",
-		"testuser@localhost")
-
+	sshm := sshMachine(t)
 	var out strings.Builder
-
-	_, err = command.Copy(
+	_, err := command.Copy(
 		&out, strings.NewReader("hello world"),
 		command.NewFilter(t.Context(), sshm, "tr", "a-z", "A-Z"),
 	)
 	if err != nil {
-		t.Fatalf("Copy failed: %v", err)
+		t.Errorf("command.Copy() err: %v", err)
 	}
-
 	if got, want := out.String(), "HELLO WORLD"; got != want {
-		t.Errorf("output = %q, want %q", got, want)
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestMachineArgQuoting(t *testing.T) {
+	sshm := sshMachine(t)
+	tests := []struct {
+		name string
+		arg  string
+	}{
+		{"double quotes", `hello "world"`},
+		{"single quotes", "it's"},
+		{"spaces", "hello   world"},
+		{"dollar sign", "$notavar"},
+		{"backticks", "`echo hi`"},
+		{"glob", "[abc]*"},
+		{"semicolon", "a; echo injected"},
+		{"pipe", "a | cat"},
+		{"command substitution", "$(cat /etc/passwd)"},
+		{"backslash", `\`},
+		{"empty", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := command.Read(
+				t.Context(), sshm, "printf", "%s", tt.arg,
+			)
+			if err != nil {
+				t.Errorf("command.Read(printf, %%s, %q) err: %v", tt.arg, err)
+			}
+			if got != tt.arg {
+				t.Errorf("got %q, want %q", got, tt.arg)
+			}
+		})
 	}
 }

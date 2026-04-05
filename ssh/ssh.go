@@ -7,9 +7,11 @@ package ssh
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"lesiw.io/command"
+	"lesiw.io/command/internal/sh"
 	"lesiw.io/command/sub"
 	"lesiw.io/fs"
 )
@@ -53,13 +55,25 @@ func (sm *machine) Command(
 ) command.Buffer {
 	sm.init(ctx)
 
-	if dir := fs.WorkDir(ctx); dir != "" {
-		// Use POSIX sh to change directory before executing.
-		// The exec "$@" preserves argument boundaries correctly.
-		cmdStr := "cd " + dir + " && exec \"$@\""
-		args = append([]string{"sh", "-c", cmdStr, "sh"}, args...)
+	// SSH concatenates remote arguments into one string and hands it to
+	// the login shell, so metacharacters in args would be interpreted by
+	// the remote shell. Build a single quoted command of the form
+	//     sh -c 'exec "$@"' sh 'arg1' 'arg2' ...
+	// where exec "$@" preserves argument boundaries and each arg is
+	// individually quoted so the remote shell passes it through literally.
+	inner := `exec "$@"`
+	dir := fs.WorkDir(ctx)
+	if dir != "" {
+		inner = "cd " + sh.Quote(dir) + " && " + inner
 		ctx = fs.WithWorkDir(ctx, "")
 	}
+	var remote strings.Builder
+	remote.WriteString("sh -c " + sh.Quote(inner) + " sh")
+	for _, arg := range args {
+		remote.WriteByte(' ')
+		remote.WriteString(sh.Quote(arg))
+	}
+	args = []string{remote.String()}
 
 	env := command.Envs(ctx)
 	if len(env) > 0 {

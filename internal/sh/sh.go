@@ -26,7 +26,18 @@ func Quote(s string) string {
 	if !unsafe.MatchString(s) {
 		return s
 	}
-	return `'` + strings.ReplaceAll(s, `'`, `\'`) + `'`
+	var out strings.Builder
+	out.Grow(len(s) + 2)
+	out.WriteByte('\'')
+	for i := range len(s) {
+		if s[i] == '\'' {
+			out.WriteString(`'\''`)
+		} else {
+			out.WriteByte(s[i])
+		}
+	}
+	out.WriteByte('\'')
+	return out.String()
 }
 
 // Join joins command arguments with proper shell quoting.
