@@ -104,7 +104,7 @@ Deploy to a remote host:
 import "lesiw.io/command/ssh"
 
 ctx, sh := context.Background(), command.Shell(
-    ssh.Machine(sys.Machine(), "deploy@prod.example.com"),
+    ssh.Machine(sys.Machine(), "ssh", "deploy@prod.example.com"),
     "systemctl",
 )
 
@@ -129,7 +129,7 @@ Copy from one to another as easily as copying files:
 
 ```go
 ctx, localSh := context.Background(), command.Shell(sys.Machine())
-remoteSh := command.Shell(ssh.Machine(sys.Machine(), "host.example.com"))
+remoteSh := command.Shell(ssh.Machine(sys.Machine(), "ssh", "host.example.com"))
 
 // Stream from local to remote
 _, err := io.Copy(
@@ -204,7 +204,7 @@ for _, host := range hosts {
     wg.Add(1)
     go func(h string) {
         defer wg.Done()
-        m := ssh.Machine(sys.Machine(), h)
+        m := ssh.Machine(sys.Machine(), "ssh", h)
         err := command.Do(ctx, m, "systemctl", "restart", "app")
         if err != nil {
             errs <- fmt.Errorf("%s: %w", h, err)

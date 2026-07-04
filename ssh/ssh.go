@@ -18,21 +18,19 @@ import (
 
 // Machine creates a command.Machine that executes commands over SSH.
 // The machine wraps the given machine m (typically sys.Machine()) and
-// prefixes all commands with the SSH connection arguments.
+// prefixes all commands with args: the complete SSH command line,
+// including the SSH client itself. Any SSH-compatible client works,
+// such as autossh or ssh wrapped in sshpass.
 //
 // Environment variables from the context are automatically converted to
 // inline command prefixes based on the detected remote operating system.
 //
 // Example:
 //
-//	m := ssh.Machine(sys.Machine(), "user@host")
+//	m := ssh.Machine(sys.Machine(), "ssh", "user@host")
 //	ctx := command.WithEnv(ctx, map[string]string{"FOO": "bar"})
 //	command.Read(ctx, m, "printenv", "FOO")
-//	// Executes: ssh user@host FOO=bar printenv FOO
-//
-// Additional SSH options can be provided:
-//
-//	m := ssh.Machine(sys.Machine(), "-p", "2222", "user@host")
+//	// Effectively: ssh user@host FOO=bar printenv FOO
 func Machine(m command.Machine, args ...string) command.Machine {
 	return &machine{
 		m:    m,
