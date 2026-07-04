@@ -110,7 +110,7 @@ func (sm *machine) Arch(ctx context.Context) string {
 func prefixEnvVars(env map[string]string, args []string) []string {
 	var prefixed []string
 	for k, v := range env {
-		prefixed = append(prefixed, k+"="+v)
+		prefixed = append(prefixed, k+"="+sh.Quote(v))
 	}
 	return append(prefixed, args...)
 }

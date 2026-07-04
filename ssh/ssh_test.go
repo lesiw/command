@@ -356,3 +356,31 @@ func TestPSNativeEscape(t *testing.T) {
 		}
 	}
 }
+
+func TestMachineEnvVarsQuoted_Unix_Mock(t *testing.T) {
+	testHookOS = func() string { return "linux" }
+	t.Cleanup(func() { testHookOS = nil })
+
+	m := new(mock.Machine)
+	sshm := Machine(m, "user@host")
+
+	ctx := command.WithEnv(t.Context(), map[string]string{
+		"MSG": "has space",
+	})
+	cmd := sshm.Command(ctx, "printenv", "MSG")
+	_, _ = io.ReadAll(cmd)
+
+	calls := mock.Calls(m)
+	if len(calls) != 1 {
+		t.Fatalf("expected exactly one call, got %d", len(calls))
+	}
+	found := false
+	for _, arg := range calls[0].Args {
+		if arg == "MSG='has space'" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("quoted env prefix missing: %v", calls[0].Args)
+	}
+}
