@@ -50,6 +50,27 @@
 // When possible, the underlying command's standard streams are attached
 // directly to the controlling terminal, letting it run interactively.
 //
+// # Lifecycle
+//
+// Creating a Buffer runs nothing; the command starts on the first
+// Read or Write.
+//
+// Closing a [NewReader] before EOF cancels the command's context, and
+// Machines terminate the command in response —
+// [lesiw.io/command/sys] kills the process — so abandoning a
+// partially read pipeline does not leak.
+// Closing it before the first Read means the command never starts.
+// Canceling the context has the same effect: the running command is
+// terminated and the pending Read returns an [Error].
+//
+// Failure does not discard output.
+// Bytes produced before a nonzero exit are returned by Read as usual,
+// and the terminal error follows.
+// Errors from failed commands are of type [Error],
+// carrying the exit code and any diagnostic output.
+//
+// # Environments
+//
 // Environment variables are part of the [context.Context].
 // They can be set using [WithEnv] and inspected using [Env].
 //
@@ -58,6 +79,16 @@
 //	    "CGO_ENABLED": "0",
 //	})
 //	command.Exec(ctx, m, "go", "build", ".")
+//
+// An environment is request-scoped state with the same shape as a
+// context: derived from a parent, threaded through every call, and
+// scoped to the work at hand, which is why the two travel together.
+//
+// [WithEnv] merges.
+// Variables already present remain set in the derived context, and
+// later values win on collision.
+// The environment follows the context across machine boundaries, so a
+// pipeline spanning several machines sees one environment.
 //
 // # Files
 //
