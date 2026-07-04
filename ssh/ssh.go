@@ -1,8 +1,10 @@
 // Package ssh implements a command.Machine that executes commands over SSH.
 //
-// Unlike raw SSH execution, ssh.Machine handles environment variable passing
-// by prefixing commands with the appropriate syntax for the remote operating
-// system (VAR=value for Unix, set VAR=value& for Windows).
+// Unlike raw SSH execution, ssh.Machine preserves argument boundaries
+// and passes environment variables from the context, using the
+// mechanism appropriate to the remote operating system: a quoting
+// shell wrapper with VAR=value prefixes on Unix, and a base64-encoded
+// PowerShell script on Windows.
 package ssh
 
 import (
@@ -21,9 +23,6 @@ import (
 // prefixes all commands with args: the complete SSH command line,
 // including the SSH client itself. Any SSH-compatible client works,
 // such as autossh or ssh wrapped in sshpass.
-//
-// Environment variables from the context are automatically converted to
-// inline command prefixes based on the detected remote operating system.
 //
 // Example:
 //
@@ -52,6 +51,9 @@ func (sm *machine) Command(
 	ctx context.Context, args ...string,
 ) command.Buffer {
 	sm.init(ctx)
+	if sm.os == "windows" {
+		return sm.windowsCommand(ctx, args...)
+	}
 
 	// SSH concatenates remote arguments into one string and hands it to
 	// the login shell, so metacharacters in args would be interpreted by
@@ -75,7 +77,7 @@ func (sm *machine) Command(
 
 	env := command.Envs(ctx)
 	if len(env) > 0 {
-		args = prefixEnvVars(sm.os, env, args)
+		args = prefixEnvVars(env, args)
 		ctx = command.WithoutEnv(ctx)
 	}
 
@@ -105,23 +107,7 @@ func (sm *machine) Arch(ctx context.Context) string {
 	return sm.arch
 }
 
-// prefixEnvVars prepends environment variable syntax to the command based
-// on the detected OS.
-func prefixEnvVars(os string, env map[string]string, args []string) []string {
-	if os == "windows" {
-		// Windows: Prepend "set VAR=value&" for each variable
-		var prefix string
-		for k, v := range env {
-			prefix += "set " + k + "=" + v + "&"
-		}
-		// Concatenate first command arg with the prefix
-		newArgs := make([]string, len(args))
-		copy(newArgs, args)
-		newArgs[0] = prefix + args[0]
-		return newArgs
-	}
-
-	// Unix-like: VAR=value VAR2=value2 command args
+func prefixEnvVars(env map[string]string, args []string) []string {
 	var prefixed []string
 	for k, v := range env {
 		prefixed = append(prefixed, k+"="+v)

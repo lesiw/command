@@ -1,10 +1,12 @@
 package ssh
 
 import (
+	"encoding/base64"
 	"io"
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf16"
 
 	"lesiw.io/command"
 	"lesiw.io/command/ctr"
@@ -143,32 +145,50 @@ func TestMachineEnvVars_Windows_Mock(t *testing.T) {
 	_, _ = io.ReadAll(cmd)
 
 	calls := mock.Calls(m)
-	if len(calls) == 0 {
-		t.Fatal("expected at least one call")
+	if len(calls) != 1 {
+		t.Fatalf("expected exactly one call, got %d", len(calls))
+	}
+	args := calls[0].Args
+
+	want := []string{
+		"user@host", "powershell.exe", "-NoProfile", "-NonInteractive",
+		"-EncodedCommand",
+	}
+	if len(args) != len(want)+1 {
+		t.Fatalf("expected %d args, got %v", len(want)+1, args)
+	}
+	for i, w := range want {
+		if args[i] != w {
+			t.Errorf("args[%d] = %q, want %q", i, args[i], w)
+		}
 	}
 
-	// Last call should be our command
-	args := calls[len(calls)-1].Args
+	script := psDecode(t, args[len(args)-1])
+	for _, w := range []string{
+		"$ErrorActionPreference = 'Stop'\n",
+		"$env:BAZ = 'qux'\n",
+		"$env:FOO = 'bar'\n",
+		"& 'printenv.exe' 'FOO'\n",
+		"exit $LASTEXITCODE\n",
+	} {
+		if !strings.Contains(script, w) {
+			t.Errorf("script missing %q:\n%s", w, script)
+		}
+	}
+}
 
-	if len(args) < 2 {
-		t.Fatalf("expected at least 2 args, got %v", args)
+// psDecode reverses psEncode: base64 to UTF-16LE to string.
+func psDecode(t *testing.T, s string) string {
+	t.Helper()
+	b, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		t.Fatalf("DecodeString() error = %v", err)
 	}
-
-	if args[0] != "user@host" {
-		t.Errorf("expected user@host as first arg, got %v", args[0])
+	codes := make([]uint16, len(b)/2)
+	for i := range codes {
+		codes[i] = uint16(b[i*2]) | uint16(b[i*2+1])<<8
 	}
-
-	// Second arg should contain "set VAR=value&" prefixes
-	secondArg := args[1]
-	if !strings.Contains(secondArg, "set FOO=bar&") {
-		t.Errorf("second arg missing 'set FOO=bar&': %s", secondArg)
-	}
-	if !strings.Contains(secondArg, "set BAZ=qux&") {
-		t.Errorf("second arg missing 'set BAZ=qux&': %s", secondArg)
-	}
-	if !strings.Contains(secondArg, "printenv.exe") {
-		t.Errorf("second arg missing command: %s", secondArg)
-	}
+	return string(utf16.Decode(codes))
 }
 
 func TestMachineNoEnvVars_Mock(t *testing.T) {
@@ -300,5 +320,39 @@ func TestMachineArgQuoting(t *testing.T) {
 				t.Errorf("got %q, want %q", got, tt.arg)
 			}
 		})
+	}
+}
+
+func TestPSNativeEscape(t *testing.T) {
+	tests := []struct {
+		in   string
+		want string
+	}{{
+		in:   "plain",
+		want: "plain",
+	}, {
+		in:   `has"quote`,
+		want: `has\"quote`,
+	}, {
+		in:   `back\slash`,
+		want: `back\slash`,
+	}, {
+		in:   `ends\`,
+		want: `ends\`,
+	}, {
+		in:   `spaced ends\`,
+		want: `spaced ends\\`,
+	}, {
+		in:   `pre\"quote`,
+		want: `pre\\\"quote`,
+	}, {
+		in:   `sh -c 'exec "$@"' sh`,
+		want: `sh -c 'exec \"$@\"' sh`,
+	}}
+	for _, tt := range tests {
+		if got := psNativeEscape(tt.in); got != tt.want {
+			t.Errorf("psNativeEscape(%q) = %q, want %q",
+				tt.in, got, tt.want)
+		}
 	}
 }

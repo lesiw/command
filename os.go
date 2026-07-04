@@ -41,6 +41,16 @@ func detectOS(ctx context.Context, m Machine) string {
 		return "windows"
 	}
 
+	// Windows OpenSSH servers can mangle the quoting of cmd /c
+	// invocations, so probe again through PowerShell, which also
+	// covers hosts whose default shell is PowerShell itself.
+	out, err = probeRead(ctx, m,
+		"powershell", "-NoProfile", "-NonInteractive", "-Command", "$env:OS",
+	)
+	if err == nil && strings.Contains(strings.ToLower(out), "windows") {
+		return "windows"
+	}
+
 	return "unknown"
 }
 
@@ -106,14 +116,16 @@ func detectArch(ctx context.Context, m Machine) string {
 		"cmd", "/c", "echo %PROCESSOR_ARCHITECTURE%",
 	)
 	if err == nil {
-		arch := strings.TrimSpace(out)
-		if arch != "%PROCESSOR_ARCHITECTURE%" {
-			return mapArchitecture(arch)
+		// Windows OpenSSH servers can mangle this invocation's quoting,
+		// so only trust the probe when it maps to a known architecture.
+		if arch := mapArchitecture(strings.TrimSpace(out)); arch != "unknown" {
+			return arch
 		}
 	}
 
 	out, err = probeRead(ctx, m,
-		"powershell", "Write-Output", "$env:PROCESSOR_ARCHITECTURE",
+		"powershell", "-NoProfile", "-NonInteractive", "-Command",
+		"$env:PROCESSOR_ARCHITECTURE",
 	)
 	if err == nil {
 		return mapArchitecture(strings.TrimSpace(out))
