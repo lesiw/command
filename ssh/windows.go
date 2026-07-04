@@ -33,7 +33,7 @@ func (sm *machine) windowsCommand(
 	ctx = command.WithoutEnv(ctx)
 	if dir := fs.WorkDir(ctx); dir != "" {
 		fmt.Fprintf(&script, "Set-Location %s\n", psQuote(dir))
-		ctx = fs.WithWorkDir(ctx, "")
+		ctx = fs.WithoutWorkDir(ctx)
 	}
 	script.WriteString("&")
 	for _, arg := range args {

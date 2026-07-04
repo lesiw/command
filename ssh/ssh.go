@@ -65,7 +65,7 @@ func (sm *machine) Command(
 	dir := fs.WorkDir(ctx)
 	if dir != "" {
 		inner = "cd " + sh.Quote(dir) + " && " + inner
-		ctx = fs.WithWorkDir(ctx, "")
+		ctx = fs.WithoutWorkDir(ctx)
 	}
 	var remote strings.Builder
 	remote.WriteString("sh -c " + sh.Quote(inner) + " sh")
