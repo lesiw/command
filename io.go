@@ -14,7 +14,14 @@ import (
 )
 
 var (
-	Trace   = io.Discard
+	// Trace is the destination for command traces. Nothing is written
+	// here unless tracing is enabled; see the Tracing section in the
+	// package documentation. The default prefixes each line with "+ ",
+	// mimicking set +x.
+	Trace io.Writer = prefix.NewWriter("+ ", os.Stderr)
+
+	// Deprecated: Set the CMDTRACE environment variable and use
+	// [Trace] instead.
 	ShTrace = prefix.NewWriter("+ ", stderr)
 
 	stdout io.Writer = os.Stdout

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
 	"strings"
 
 	"lesiw.io/command"
@@ -119,30 +118,6 @@ func ExampleHandleFunc() {
 	fmt.Println(out)
 	// Output:
 	// HELLO
-}
-
-func Example_trace() {
-	command.Trace = os.Stdout // For capture only: consider os.Stderr instead.
-	defer func() { command.Trace = io.Discard }()
-
-	m, ctx := mem.Machine(), context.Background()
-	ctx = command.WithEnv(ctx, map[string]string{"MY_VAR": "test"})
-
-	out, err := command.Read(ctx, m, "echo", "hello")
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(out)
-	out, err = command.Read(ctx, m, "echo", "world")
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(out)
-	// Output:
-	// MY_VAR=test echo hello
-	// hello
-	// MY_VAR=test echo world
-	// world
 }
 
 func ExampleCreateBuffer() {

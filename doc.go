@@ -371,8 +371,20 @@
 //
 // # Tracing
 //
-// [Trace] can optionally be set to any [io.Writer], including [os.Stderr].
+// The CMDTRACE environment variable traces commands as they run.
 // Commands are traced when buffers are created via [Exec], [Read], or [Do],
 // before any I/O operations begin.
-// [lesiw.io/command/sys] provides output that mimics set +x.
+//
+//	CMDTRACE=on   trace commands to standard error
+//	CMDTRACE=full trace commands and environment variables
+//
+// The on setting prints arguments only, omitting environment
+// variables. The full setting includes environment variables.
+// Any other value disables tracing.
+//
+// Traces write to [Trace], which defaults to standard error with each
+// line prefixed by "+ ", mimicking set +x. Replace it to send traces
+// elsewhere:
+//
+//	command.Trace = logFile
 package command

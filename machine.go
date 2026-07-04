@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
+	"lesiw.io/command/internal/sh"
 	"lesiw.io/fs"
 )
 
@@ -104,7 +106,7 @@ func Shutdown(ctx context.Context, m Machine) error {
 // Unlike Read, errors returned by Exec will not include log output.
 func Exec(ctx context.Context, m Machine, args ...string) error {
 	r := m.Command(ctx, args...)
-	trace(r)
+	trace(r, args...)
 	return exec(r)
 }
 
@@ -121,7 +123,7 @@ func Read(ctx context.Context, m Machine, args ...string) (string, error) {
 		logger.Log(&buf)
 	}
 
-	trace(r)
+	trace(r, args...)
 	out, err := io.ReadAll(r)
 
 	// Convert to string then strip trailing newlines
@@ -148,7 +150,7 @@ func Do(ctx context.Context, m Machine, args ...string) error {
 		logger.Log(&buf)
 	}
 
-	trace(r)
+	trace(r, args...)
 	_, err := io.Copy(io.Discard, r)
 
 	if e := new(Error); err != nil && buf.Len() > 0 && errors.As(err, &e) {
@@ -174,15 +176,16 @@ func exec(buf Buffer) error {
 	return err
 }
 
-func trace(buf Buffer) {
-	if stringer, ok := buf.(fmt.Stringer); ok {
-		s := stringer.String()
-		s = strings.TrimRight(s, "\n")
-		if s != "" {
-			_, _ = fmt.Fprintf(Trace, "%s\n", s)
-		}
-	} else {
-		_, _ = fmt.Fprintf(Trace, "%v\n", buf)
+// trace reports commands to [Trace] per the CMDTRACE environment
+// variable, which is read on each call so tests and long-lived
+// processes see changes.
+func trace(buf Buffer, args ...string) {
+	switch os.Getenv("CMDTRACE") {
+	case "on":
+		_, _ = fmt.Fprintf(Trace, "%s\n", sh.Join(args))
+	case "full":
+		line := strings.TrimRight(fmt.Sprint(buf), "\n")
+		_, _ = fmt.Fprintf(Trace, "%s\n", line)
 	}
 }
 
