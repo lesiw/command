@@ -75,7 +75,7 @@ attaches the command to the terminal.
 > The in-memory machine runs in the Go Playground, so the basics can
 > be tried without installing anything:
 > [reading a command](https://go.dev/play/p/Bih75QdcZdw),
-> [piping](https://go.dev/play/p/VuA8HZMwaLe),
+> [piping](https://go.dev/play/p/eU9TkBMOCls),
 > [files](https://go.dev/play/p/0UjNOYQ_kN-).
 
 ## Machines
@@ -128,9 +128,9 @@ m := command.HandleFunc(sys.Machine(), "go",
 Two stages are `io.Copy`:
 
 ```go
-// echo "hello, pipes" | tee hello.txt
+// echo "hello, pipes" | tr a-z A-Z
 _, err := io.Copy(
-    command.NewWriter(ctx, m, "tee", "hello.txt"),
+    command.NewWriter(ctx, m, "tr", "a-z", "A-Z"),
     command.NewReader(ctx, m, "echo", "hello, pipes"),
 )
 ```
@@ -143,7 +143,7 @@ one pipeline:
 ```go
 backup := ssh.Machine(m, "ssh", "backup@vault.example.com")
 _, err := command.Copy(
-    command.NewWriter(ctx, backup, "tee", "db.sql.gz"),
+    fs.CreateBuffer(ctx, command.FS(backup), "db.sql.gz"),
     command.NewReader(ctx, m, "pg_dumpall"),
     command.NewFilter(ctx, m, "gzip"),
 )

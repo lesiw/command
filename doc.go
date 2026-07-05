@@ -30,10 +30,10 @@
 //
 // They can be piped with [io.Copy].
 //
-//	// Example only: use fs.WriteFile(ctx, FS(m)).
+//	// echo "hello, pipes" | tr a-z A-Z
 //	io.Copy(
-//	    command.NewWriter(ctx, m, "tee", "hello.txt"),
-//	    command.NewReader(ctx, m, "echo", "Hello world!"),
+//	    command.NewWriter(ctx, m, "tr", "a-z", "A-Z"),
+//	    command.NewReader(ctx, m, "echo", "hello, pipes"),
 //	)
 //
 // [Copy] is a generalization of [io.Copy],
