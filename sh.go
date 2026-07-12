@@ -48,7 +48,7 @@ type Sh struct {
 	// Cached values (populated on first use)
 	os   string
 	arch string
-	fsys fs.FS
+	fsys zeros.OnceValue[fs.FS]
 }
 
 // Shell creates a new shell that wraps the given core machine.
@@ -84,16 +84,12 @@ func Shell(core Machine, commands ...string) *Sh {
 	return sh
 }
 
-// init detects and caches OS, Arch, and FS on first use.
-// This is called once via sync.Once to ensure thread-safe initialization.
+// init detects and caches OS and Arch on first use.
 func (sh *Sh) init(ctx context.Context) {
 	sh.once.Do(func() {
 		sh.os = OS(ctx, sh.m)
 		sh.arch = Arch(ctx, sh.m)
 	})
-	if sh.fsys == nil {
-		sh.fsys = FS(sh.m)
-	}
 }
 
 // OS returns the operating system type for this shell.
@@ -117,10 +113,7 @@ func (sh *Sh) Arch(ctx context.Context) string {
 // FS returns the filesystem for this shell.
 // The filesystem is created only once on first use and cached for performance.
 func (sh *Sh) FS() fs.FS {
-	if sh.fsys == nil {
-		sh.fsys = FS(sh.m)
-	}
-	return sh.fsys
+	return sh.fsys.Do(func() fs.FS { return FS(sh.m) })
 }
 
 // Env returns the value of the environment variable named by key.

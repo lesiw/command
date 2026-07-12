@@ -4,11 +4,34 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
 
 	"lesiw.io/command"
 	"lesiw.io/command/mem"
 )
+
+func TestShellConcurrentUse(t *testing.T) {
+	ctx := t.Context()
+	sh := command.Shell(mem.Machine())
+	sh.Handle("echo", mem.Machine())
+
+	var wg sync.WaitGroup
+	for range 32 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_ = sh.OS(ctx)
+			_ = sh.Arch(ctx)
+			_ = sh.FS()
+			_, err := sh.Read(ctx, "echo", "hi")
+			if err != nil {
+				t.Errorf("Read: %v", err)
+			}
+		}()
+	}
+	wg.Wait()
+}
 
 func TestShellBasic(t *testing.T) {
 	ctx, sh := context.Background(), command.Shell(mem.Machine())
