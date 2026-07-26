@@ -511,3 +511,22 @@ func TestMachineConcurrentRecordCall(t *testing.T) {
 		)
 	}
 }
+
+// TestPipelineInputNeverLost hammers the pipeline shape in which the
+// command's canned output reaches EOF while its input is still being
+// written: the recorded call must keep the completed input.
+func TestPipelineInputNeverLost(t *testing.T) {
+	for range 1000 {
+		m := new(mock.Machine)
+		m.Return(strings.NewReader("out"), "cmd")
+		var result strings.Builder
+		_, err := command.Copy(&result, strings.NewReader("in"),
+			command.NewFilter(t.Context(), m, "cmd"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got, want := string(m.Calls[0].Got), "in"; got != want {
+			t.Fatalf("input = %q, want %q", got, want)
+		}
+	}
+}

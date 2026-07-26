@@ -364,21 +364,18 @@ func (c *mockCmd) Close() error {
 
 func (c *mockCmd) recordCall() {
 	c.Lock()
+	defer c.Unlock()
 	if len(c.input) > 0 {
 		c.call.Got = append([]byte{}, c.input...)
 	}
-	call := c.call
-	c.Unlock()
-
 	c.once.Do(func() {
 		c.machine.mu.Lock()
 		c.machine.Calls = append(c.machine.Calls, Call{})
 		c.callIndex = len(c.machine.Calls) - 1
 		c.machine.mu.Unlock()
 	})
-
 	c.machine.mu.Lock()
-	c.machine.Calls[c.callIndex] = call
+	c.machine.Calls[c.callIndex] = c.call
 	c.machine.mu.Unlock()
 }
 
