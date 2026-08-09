@@ -387,7 +387,6 @@ func (c *mockCmd) recordCall() {
 //	gitCalls := mock.Calls(m, "git")              // All git commands
 //	branchCalls := mock.Calls(m, "git", "branch") // Only git branch commands
 func Calls(m command.Machine, pattern ...string) (calls []Call) {
-
 	if mm, ok := m.(*Machine); ok {
 		mm.mu.Lock()
 		defer mm.mu.Unlock()

@@ -1,7 +1,7 @@
 # lesiw.io/command
 
 [![Go Reference](https://pkg.go.dev/badge/lesiw.io/command.svg)](https://pkg.go.dev/lesiw.io/command)
-[![CI](https://github.com/lesiw/command/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/lesiw/command/actions/workflows/ci.yml)
+[![CI](https://github.com/lesiw/command/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/lesiw/command/actions/workflows/main.yml)
 [![License](https://img.shields.io/github/license/lesiw/command)](../LICENSE)
 
 Command buffers for Go: a command is an `io.Reader`, piping is
