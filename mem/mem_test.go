@@ -30,9 +30,10 @@ func TestCommandSuccess(t *testing.T) {
 }
 
 func TestEcho(t *testing.T) {
-	m, ctx := Machine(), t.Context()
-
-	cmd := m.Command(ctx, "echo", "hello", "world")
+	var (
+		m, ctx = Machine(), t.Context()
+		cmd    = m.Command(ctx, "echo", "hello", "world")
+	)
 	out, err := io.ReadAll(cmd)
 	if err != nil {
 		t.Fatalf("echo failed: %v", err)

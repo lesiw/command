@@ -22,13 +22,15 @@ func TestReaderRead(t *testing.T) {
 }
 
 func TestReaderCancelOnClose(t *testing.T) {
-	var cmdCtx context.Context
-	r := NewReader(t.Context(), MachineFunc(func(
-		ctx context.Context, _ ...string,
-	) Buffer {
-		cmdCtx = ctx
-		return strings.NewReader("data")
-	}))
+	var (
+		cmdCtx context.Context
+		r      = NewReader(t.Context(), MachineFunc(func(
+			ctx context.Context, _ ...string,
+		) Buffer {
+			cmdCtx = ctx
+			return strings.NewReader("data")
+		}))
+	)
 	closeOnCleanup(t, r)
 	if _, err := r.Read(make([]byte, 1)); err != nil {
 		t.Fatalf("Read() error = %v", err)
@@ -44,13 +46,15 @@ func TestReaderCancelOnClose(t *testing.T) {
 }
 
 func TestReaderNoOpIfUnused(t *testing.T) {
-	var cmdCtx context.Context
-	r := NewReader(t.Context(), MachineFunc(func(
-		ctx context.Context, _ ...string,
-	) Buffer {
-		cmdCtx = ctx
-		return strings.NewReader("data")
-	}))
+	var (
+		cmdCtx context.Context
+		r      = NewReader(t.Context(), MachineFunc(func(
+			ctx context.Context, _ ...string,
+		) Buffer {
+			cmdCtx = ctx
+			return strings.NewReader("data")
+		}))
+	)
 	closeOnCleanup(t, r)
 	if err := r.Close(); err != nil {
 		t.Errorf("Close() error = %v", err)
@@ -65,12 +69,14 @@ func TestReaderNoOpIfUnused(t *testing.T) {
 }
 
 func TestReaderClosesUnderlyingReader(t *testing.T) {
-	var closed closeTracker
-	r := NewReader(t.Context(), MachineFunc(func(
-		context.Context, ...string,
-	) Buffer {
-		return &closed
-	}))
+	var (
+		closed closeTracker
+		r      = NewReader(t.Context(), MachineFunc(func(
+			context.Context, ...string,
+		) Buffer {
+			return &closed
+		}))
+	)
 	closeOnCleanup(t, r)
 	if _, err := r.Read(make([]byte, 1)); err != nil && err != io.EOF {
 		t.Fatalf("Read() error = %v", err)
@@ -84,12 +90,14 @@ func TestReaderClosesUnderlyingReader(t *testing.T) {
 }
 
 func TestReaderNoCloseIfUnused(t *testing.T) {
-	var closed closeTracker
-	r := NewReader(t.Context(), MachineFunc(func(
-		context.Context, ...string,
-	) Buffer {
-		return &closed
-	}))
+	var (
+		closed closeTracker
+		r      = NewReader(t.Context(), MachineFunc(func(
+			context.Context, ...string,
+		) Buffer {
+			return &closed
+		}))
+	)
 	closeOnCleanup(t, r)
 	if err := r.Close(); err != nil {
 		t.Errorf("Close() error = %v", err)

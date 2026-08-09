@@ -24,7 +24,7 @@ type nopCloser struct{}
 func (nopCloser) Close() error { return nil }
 
 func TestWriterWrite(t *testing.T) {
-	buf := &bytes.Buffer{}
+	buf := new(bytes.Buffer)
 	w := NewWriter(t.Context(), MachineFunc(func(
 		context.Context, ...string,
 	) Buffer {
@@ -46,17 +46,19 @@ func TestWriterWrite(t *testing.T) {
 }
 
 func TestWriterNoOpIfUnused(t *testing.T) {
-	var cmdCtx context.Context
-	w := NewWriter(t.Context(), MachineFunc(func(
-		ctx context.Context, _ ...string,
-	) Buffer {
-		cmdCtx = ctx
-		return struct {
-			io.Reader
-			io.Writer
-			io.Closer
-		}{strings.NewReader(""), io.Discard, nopCloser{}}
-	}))
+	var (
+		cmdCtx context.Context
+		w      = NewWriter(t.Context(), MachineFunc(func(
+			ctx context.Context, _ ...string,
+		) Buffer {
+			cmdCtx = ctx
+			return struct {
+				io.Reader
+				io.Writer
+				io.Closer
+			}{strings.NewReader(""), io.Discard, nopCloser{}}
+		}))
+	)
 	closeOnCleanup(t, w)
 	if err := w.Close(); err != nil {
 		t.Errorf("Close() error = %v", err)
@@ -71,12 +73,14 @@ func TestWriterNoOpIfUnused(t *testing.T) {
 }
 
 func TestWriterClosesUnderlyingWriter(t *testing.T) {
-	var closed closeTracker
-	w := NewWriter(t.Context(), MachineFunc(func(
-		context.Context, ...string,
-	) Buffer {
-		return &closed
-	}))
+	var (
+		closed closeTracker
+		w      = NewWriter(t.Context(), MachineFunc(func(
+			context.Context, ...string,
+		) Buffer {
+			return &closed
+		}))
+	)
 	closeOnCleanup(t, w)
 	if _, err := w.Write([]byte("data")); err != nil {
 		t.Fatalf("Write() error = %v", err)
@@ -120,7 +124,7 @@ func TestWriterWriteAfterClose(t *testing.T) {
 			io.Reader
 			io.Writer
 			io.Closer
-		}{strings.NewReader(""), &bytes.Buffer{}, nopCloser{}}
+		}{strings.NewReader(""), new(bytes.Buffer), nopCloser{}}
 	}))
 	closeOnCleanup(t, w)
 	if _, err := w.Write([]byte("data")); err != nil {
@@ -163,7 +167,7 @@ func TestWriterMultipleClose(t *testing.T) {
 			io.Reader
 			io.Writer
 			io.Closer
-		}{strings.NewReader(""), &bytes.Buffer{}, nopCloser{}}
+		}{strings.NewReader(""), new(bytes.Buffer), nopCloser{}}
 	}))
 	closeOnCleanup(t, w)
 	if _, err := w.Write([]byte("data")); err != nil {
@@ -188,7 +192,7 @@ func TestWriterConcurrentWriteClose(t *testing.T) {
 				io.Reader
 				io.Writer
 				io.Closer
-			}{strings.NewReader(""), &bytes.Buffer{}, nopCloser{}}
+			}{strings.NewReader(""), new(bytes.Buffer), nopCloser{}}
 		}))
 		closeOnCleanup(t, w)
 

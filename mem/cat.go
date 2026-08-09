@@ -24,7 +24,7 @@ func catCommand(
 			nopClose
 			sh.Stringer
 		}{
-			Buffer:   &bytes.Buffer{},
+			Buffer:   new(bytes.Buffer),
 			Stringer: sh.String(command.Envs(ctx), args...),
 		}
 	}

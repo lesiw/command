@@ -3,7 +3,6 @@
 package mock_test
 
 import (
-	"context"
 	"strings"
 	"testing"
 	"testing/synctest"
@@ -14,7 +13,7 @@ import (
 
 func TestMachineConcurrentPipeline(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
-		m, ctx := new(mock.Machine), context.Background()
+		m, ctx := new(mock.Machine), t.Context()
 		m.Return(strings.NewReader("FILTERED\n"), "filter")
 
 		var result strings.Builder

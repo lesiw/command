@@ -41,15 +41,13 @@ func Copy(
 	dst io.Writer, src io.Reader, fil ...io.ReadWriter,
 ) (written int64, err error) {
 	var (
-		g errgroup.Group
-		r io.Reader
-		w io.Writer
-
-		count = make(chan int64)
-		total = make(chan int64)
+		g       errgroup.Group
+		r       io.Reader
+		w       io.Writer
+		count   = make(chan int64)
+		total   = make(chan int64)
+		results = &copyError{results: make([]copyResult, len(fil)+1)}
 	)
-
-	results := &copyError{results: make([]copyResult, len(fil)+1)}
 
 	go func() {
 		var written int64
@@ -145,11 +143,10 @@ func (e *copyError) Error() string {
 	return strings.Join(parts, "\n\n")
 }
 
-func (e *copyError) Unwrap() []error {
+func (e *copyError) Unwrap() (errs []error) {
 	e.Lock()
 	defer e.Unlock()
 
-	var errs []error
 	for _, result := range e.results {
 		if result.err != nil {
 			errs = append(errs, result.err)

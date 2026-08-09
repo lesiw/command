@@ -94,10 +94,12 @@ func TestCmdString(t *testing.T) {
 }
 
 func TestCmdLog(t *testing.T) {
-	r := alpine(t).Command(t.Context(),
-		"sh", "-c", "echo error >&2; echo output",
+	var (
+		r = alpine(t).Command(t.Context(),
+			"sh", "-c", "echo error >&2; echo output",
+		)
+		log strings.Builder
 	)
-	var log strings.Builder
 	if l, ok := r.(command.LogBuffer); !ok {
 		t.Fatal("r is not a command.LogBuffer")
 	} else {

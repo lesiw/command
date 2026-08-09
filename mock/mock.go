@@ -218,7 +218,7 @@ func (m *Machine) makeQueueHandler(arg []string) func(
 				reader = bytes.NewReader(captured)
 			} else if len(resp.readers) == 1 {
 				// Set up TeeReader to capture output for repeating.
-				captureBuf = &bytes.Buffer{}
+				captureBuf = new(bytes.Buffer)
 				reader = io.TeeReader(resp.readers[0], captureBuf)
 			}
 		} else if captured, ok := m.captured[key]; ok {
@@ -293,7 +293,7 @@ func (m *Machine) Command(ctx context.Context, args ...string) command.Buffer {
 	m.init()
 	m.mu.Lock()
 	var bestHandler *mockHandler
-	var bestHandlerLen int = -1
+	bestHandlerLen := -1
 
 	for i := range m.handlers {
 		h := &m.handlers[i]
@@ -390,8 +390,7 @@ func (c *mockCmd) recordCall() {
 //
 //	gitCalls := mock.Calls(m, "git")              // All git commands
 //	branchCalls := mock.Calls(m, "git", "branch") // Only git branch commands
-func Calls(m command.Machine, pattern ...string) []Call {
-	var calls []Call
+func Calls(m command.Machine, pattern ...string) (calls []Call) {
 
 	if mm, ok := m.(*Machine); ok {
 		mm.mu.Lock()

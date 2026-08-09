@@ -13,7 +13,7 @@ import (
 )
 
 func TestMachineSingleQueue(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 	m.Return(strings.NewReader("world"), "hello")
 
 	want := "world"
@@ -25,7 +25,7 @@ func TestMachineSingleQueue(t *testing.T) {
 }
 
 func TestMachineQueueRepeatsLast(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 	m.Return(strings.NewReader("first"), "echo")
 	m.Return(strings.NewReader("second"), "echo")
 
@@ -54,9 +54,9 @@ func TestMachineQueueRepeatsLast(t *testing.T) {
 }
 
 func TestMachineNoQueueReturnsEmpty(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 
-	want := ""
+	var want string
 	if got, err := command.Read(ctx, m, "foo"); err != nil {
 		t.Fatalf("expected quiet success, got error: %v", err)
 	} else if got != want {
@@ -65,7 +65,7 @@ func TestMachineNoQueueReturnsEmpty(t *testing.T) {
 }
 
 func TestMachineTracksInvocations(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 	m.Return(strings.NewReader("main\n"), "git")
 
 	gitArgs := []string{"git", "branch", "--show-current"}
@@ -93,7 +93,7 @@ func TestMachineTracksInvocations(t *testing.T) {
 }
 
 func TestMachineTracksInput(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 	m.Return(strings.NewReader("echoed\n"), "tee")
 
 	cmd := command.NewFilter(ctx, m, "tee", "output.txt")
@@ -117,11 +117,13 @@ func TestMachineTracksInput(t *testing.T) {
 }
 
 func TestMachineTracksEnvironment(t *testing.T) {
-	ctx := command.WithEnv(context.Background(), map[string]string{
-		"FOO": "bar",
-		"BAZ": "qux",
-	})
-	m := new(mock.Machine)
+	var (
+		ctx = command.WithEnv(context.Background(), map[string]string{
+			"FOO": "bar",
+			"BAZ": "qux",
+		})
+		m = new(mock.Machine)
+	)
 	m.Return(strings.NewReader(""), "env")
 
 	if err := command.Do(ctx, m, "env"); err != nil {
@@ -142,7 +144,7 @@ func TestMachineTracksEnvironment(t *testing.T) {
 }
 
 func TestMachineDifferentCommands(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 	m.Return(strings.NewReader("main\n"), "git")
 	m.Return(strings.NewReader("1.2.3\n"), "npm")
 
@@ -166,7 +168,7 @@ func TestMachineDifferentCommands(t *testing.T) {
 }
 
 func TestMachineCustomHandler(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 
 	// Override specific command with custom logic.
 	sh := command.Shell(m)
@@ -194,7 +196,7 @@ func TestMachineCustomHandler(t *testing.T) {
 }
 
 func TestMachineInputCapture(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 	m.Return(strings.NewReader("output"), "cmd")
 
 	cmd := command.NewFilter(ctx, m, "cmd", "arg")
@@ -220,7 +222,7 @@ func TestMachineInputCapture(t *testing.T) {
 }
 
 func TestCallsDirect(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 	m.Return(strings.NewReader("main\n"), "git")
 	m.Return(strings.NewReader("1.0.0\n"), "npm")
 
@@ -238,7 +240,7 @@ func TestCallsDirect(t *testing.T) {
 }
 
 func TestCallsThroughShell(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 	m.Return(strings.NewReader("main\n"), "git")
 	m.Return(strings.NewReader("1.0.0\n"), "npm")
 
@@ -280,7 +282,7 @@ func TestCallsThroughShell(t *testing.T) {
 }
 
 func TestCallsForDirect(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 	m.Return(strings.NewReader("main\n"), "git")
 	m.Return(strings.NewReader("1.0.0\n"), "npm")
 
@@ -312,7 +314,7 @@ func TestCallsForDirect(t *testing.T) {
 }
 
 func TestCallsForThroughShell(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 	m.Return(strings.NewReader("main\n"), "git")
 	m.Return(strings.NewReader("1.0.0\n"), "npm")
 
@@ -338,7 +340,7 @@ func TestCallsForThroughShell(t *testing.T) {
 }
 
 func TestCallsWithPattern(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 	m.Return(strings.NewReader("main\n"), "git")
 
 	if err := command.Do(ctx, m, "git", "branch"); err != nil {
@@ -385,7 +387,7 @@ func TestCallsNonMock(t *testing.T) {
 }
 
 func TestMachineDo(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 
 	// Register custom handler that returns command not found.
 	m.Do(func(_ context.Context, args ...string) command.Buffer {
@@ -398,7 +400,7 @@ func TestMachineDo(t *testing.T) {
 }
 
 func TestMachineDoConditional(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 
 	// Register conditional handler based on args.
 	m.Do(func(_ context.Context, args ...string) command.Buffer {
@@ -424,7 +426,7 @@ func TestMachineDoConditional(t *testing.T) {
 }
 
 func TestMachineDoOverridesReturn(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 
 	// Set up Return for echo command.
 	m.Return(strings.NewReader("from Return\n"), "echo")
@@ -443,7 +445,7 @@ func TestMachineDoOverridesReturn(t *testing.T) {
 }
 
 func TestMachineRepeatsResetOnNewQueue(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 
 	// Queue first reader.
 	m.Return(strings.NewReader("first\n"), "test")
@@ -481,7 +483,7 @@ func TestMachineRepeatsResetOnNewQueue(t *testing.T) {
 }
 
 func TestMachineErrorPreservation(t *testing.T) {
-	m, ctx := new(mock.Machine), context.Background()
+	m, ctx := new(mock.Machine), t.Context()
 
 	testErr := fmt.Errorf("test error from reader")
 	m.Return(iotest.ErrReader(testErr), "fail")

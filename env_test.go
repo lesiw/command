@@ -8,12 +8,13 @@ import (
 )
 
 func TestEnvQueryMachine(t *testing.T) {
-	m := mem.Machine()
-	ctx := command.WithEnv(t.Context(), map[string]string{
-		"TEST_VAR": "from_machine",
-	})
-
-	got := command.Env(ctx, m, "TEST_VAR")
+	var (
+		m   = mem.Machine()
+		ctx = command.WithEnv(t.Context(), map[string]string{
+			"TEST_VAR": "from_machine",
+		})
+		got = command.Env(ctx, m, "TEST_VAR")
+	)
 	if want := "from_machine"; got != want {
 		t.Errorf("Env(TEST_VAR) = %q, want %q", got, want)
 	}
@@ -24,10 +25,12 @@ func TestEnvQueryMachine(t *testing.T) {
 }
 
 func TestEnvContextOverridesMachine(t *testing.T) {
-	m := mem.Machine()
-	ctx := command.WithEnv(t.Context(), map[string]string{
-		"HOME": "/home/mem",
-	})
+	var (
+		m   = mem.Machine()
+		ctx = command.WithEnv(t.Context(), map[string]string{
+			"HOME": "/home/mem",
+		})
+	)
 
 	if got, want := command.Env(ctx, m, "HOME"), "/home/mem"; got != want {
 		t.Errorf("Env(HOME) = %q, want %q", got, want)

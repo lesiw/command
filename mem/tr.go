@@ -93,14 +93,18 @@ func (c *trCmd) String() string {
 
 // expandSet expands character ranges like a-z into individual characters.
 func expandSet(s string) []rune {
-	var result []rune
-	runes := []rune(s)
+	var (
+		result []rune
+		runes  = []rune(s)
+	)
 
 	for i := 0; i < len(runes); i++ {
 		if i+2 < len(runes) && runes[i+1] == '-' {
 			// Range detected
-			start := runes[i]
-			end := runes[i+2]
+			var (
+				start = runes[i]
+				end   = runes[i+2]
+			)
 
 			// Handle both forward and backward ranges
 			if start <= end {

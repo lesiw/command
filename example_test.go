@@ -15,8 +15,10 @@ import (
 )
 
 func ExampleCopy() {
-	ctx, m := context.Background(), mem.Machine()
-	var buf bytes.Buffer
+	var (
+		ctx, m = context.Background(), mem.Machine()
+		buf    bytes.Buffer
+	)
 	_, err := command.Copy(
 		&buf,
 		strings.NewReader("hello world"),
@@ -52,14 +54,16 @@ func ExampleWithEnv() {
 }
 
 func ExampleWithEnv_multiple() {
-	m := mem.Machine()
-	ctx1 := command.WithEnv(context.Background(), map[string]string{
-		"HOME": "/",
-		"TEST": "foobar",
-	})
-	ctx2 := command.WithEnv(ctx1, map[string]string{
-		"HOME": "/home/example",
-	})
+	var (
+		m    = mem.Machine()
+		ctx1 = command.WithEnv(context.Background(), map[string]string{
+			"HOME": "/",
+			"TEST": "foobar",
+		})
+		ctx2 = command.WithEnv(ctx1, map[string]string{
+			"HOME": "/home/example",
+		})
+	)
 	fmt.Println("ctx1(HOME):", command.Env(ctx1, m, "HOME"))
 	fmt.Println("ctx1(TEST):", command.Env(ctx1, m, "TEST"))
 	fmt.Println("ctx2(HOME):", command.Env(ctx2, m, "HOME"))
@@ -72,10 +76,11 @@ func ExampleWithEnv_multiple() {
 }
 
 func ExampleShell() {
-	ctx := context.Background()
-	sh := command.Shell(mem.Machine(), "tr", "cat")
-
-	var buf bytes.Buffer
+	var (
+		ctx = context.Background()
+		sh  = command.Shell(mem.Machine(), "tr", "cat")
+		buf bytes.Buffer
+	)
 	_, err := command.Copy(
 		&buf,
 		strings.NewReader("hello"),
@@ -90,8 +95,10 @@ func ExampleShell() {
 }
 
 func ExampleHandle() {
-	m, ctx := mem.Machine(), context.Background()
-	uname := new(mock.Machine)
+	var (
+		m, ctx = mem.Machine(), context.Background()
+		uname  = new(mock.Machine)
+	)
 	uname.Return(strings.NewReader("fakeOS"), "uname")
 	m = command.Handle(m, "uname", uname)
 
@@ -121,8 +128,10 @@ func ExampleHandleFunc() {
 }
 
 func ExampleCreateBuffer() {
-	ctx, m := context.Background(), mem.Machine()
-	fsys := command.FS(m)
+	var (
+		ctx, m = context.Background(), mem.Machine()
+		fsys   = command.FS(m)
+	)
 
 	_, err := io.Copy(
 		fs.CreateBuffer(ctx, fsys, "message.txt"),

@@ -177,8 +177,10 @@ var windowsWalkEntriesTests = []struct {
 func TestParseWindowsWalkEntries(t *testing.T) {
 	for _, tt := range windowsWalkEntriesTests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := strings.NewReader(tt.input)
-			var got []dirEntry
+			var (
+				r   = strings.NewReader(tt.input)
+				got []dirEntry
+			)
 			for entry, err := range windowsWalkEntries(r) {
 				if err != nil {
 					t.Fatalf("parser error = %v", err)

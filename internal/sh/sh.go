@@ -51,8 +51,10 @@ func Join(parts []string) string {
 
 // sortkeys returns the sorted keys of a map.
 func sortkeys[K cmp.Ordered, V any](m map[K]V) []K {
-	keys := make([]K, len(m))
-	var i int
+	var (
+		keys = make([]K, len(m))
+		i    int
+	)
 	for k := range m {
 		keys[i] = k
 		i++

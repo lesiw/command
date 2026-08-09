@@ -32,8 +32,10 @@ func teeCommand(
 	ctx context.Context, m *machine, args ...string,
 ) command.Buffer {
 	// Open all output files
-	writers := make([]io.Writer, 0, len(args)-1)
-	closers := make([]io.Closer, 0, len(args)-1)
+	var (
+		writers = make([]io.Writer, 0, len(args)-1)
+		closers = make([]io.Closer, 0, len(args)-1)
+	)
 	for _, path := range args[1:] {
 		fw, err := fs.Create(ctx, m.FS(), path)
 		if err != nil {

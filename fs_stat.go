@@ -54,11 +54,9 @@ func parseGNUStat(out, name string) (fs.FileInfo, error) {
 		return nil, fmt.Errorf("invalid stat output")
 	}
 
-	var (
-		modeHex  = fields[0]
-		sizeStr  = fields[1]
-		mtimeStr = fields[2]
-	)
+	modeHex := fields[0]
+	sizeStr := fields[1]
+	mtimeStr := fields[2]
 
 	modeInt, err := strconv.ParseUint(modeHex, 16, 32)
 	if err != nil {
@@ -97,11 +95,9 @@ func parseBSDStat(out, name string) (fs.FileInfo, error) {
 		return nil, fmt.Errorf("invalid stat output")
 	}
 
-	var (
-		modeOct  = fields[0]
-		sizeStr  = fields[1]
-		mtimeStr = fields[2]
-	)
+	modeOct := fields[0]
+	sizeStr := fields[1]
+	mtimeStr := fields[2]
 
 	modeInt, err := strconv.ParseUint(modeOct, 8, 32)
 	if err != nil {
@@ -140,11 +136,9 @@ func parseWindowsStat(out, name string) (fs.FileInfo, error) {
 		return nil, fmt.Errorf("invalid stat output")
 	}
 
-	var (
-		modeStr  = fields[0]
-		sizeStr  = fields[1]
-		ftimeStr = fields[2]
-	)
+	modeStr := fields[0]
+	sizeStr := fields[1]
+	ftimeStr := fields[2]
 
 	var mode fs.Mode
 	var dir bool

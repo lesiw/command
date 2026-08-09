@@ -110,8 +110,8 @@ func TestMachineEnvVars_Unix_Mock(t *testing.T) {
 	}
 
 	// Check for env vars
-	foundFoo := false
-	foundBaz := false
+	var foundFoo bool
+	var foundBaz bool
 	for _, arg := range args {
 		if arg == "FOO=bar" {
 			foundFoo = true
@@ -262,10 +262,12 @@ func TestMachineSSHOptions_Mock(t *testing.T) {
 }
 
 func TestMachineRealSSH(t *testing.T) {
-	sshm := sshMachine(t)
-	ctx := command.WithEnv(t.Context(), map[string]string{
-		"TEST_VAR": "hello_ssh",
-	})
+	var (
+		sshm = sshMachine(t)
+		ctx  = command.WithEnv(t.Context(), map[string]string{
+			"TEST_VAR": "hello_ssh",
+		})
+	)
 	result, err := command.Read(ctx, sshm, "printenv", "TEST_VAR")
 	if err != nil {
 		t.Errorf("command.Read(printenv, TEST_VAR) err: %v", err)
@@ -276,8 +278,10 @@ func TestMachineRealSSH(t *testing.T) {
 }
 
 func TestMachineStreaming(t *testing.T) {
-	sshm := sshMachine(t)
-	var out strings.Builder
+	var (
+		sshm = sshMachine(t)
+		out  strings.Builder
+	)
 	_, err := command.Copy(
 		&out, strings.NewReader("hello world"),
 		command.NewFilter(t.Context(), sshm, "tr", "a-z", "A-Z"),
@@ -291,23 +295,25 @@ func TestMachineStreaming(t *testing.T) {
 }
 
 func TestMachineArgQuoting(t *testing.T) {
-	sshm := sshMachine(t)
-	tests := []struct {
-		name string
-		arg  string
-	}{
-		{"double quotes", `hello "world"`},
-		{"single quotes", "it's"},
-		{"spaces", "hello   world"},
-		{"dollar sign", "$notavar"},
-		{"backticks", "`echo hi`"},
-		{"glob", "[abc]*"},
-		{"semicolon", "a; echo injected"},
-		{"pipe", "a | cat"},
-		{"command substitution", "$(cat /etc/passwd)"},
-		{"backslash", `\`},
-		{"empty", ""},
-	}
+	var (
+		sshm  = sshMachine(t)
+		tests = []struct {
+			name string
+			arg  string
+		}{
+			{"double quotes", `hello "world"`},
+			{"single quotes", "it's"},
+			{"spaces", "hello   world"},
+			{"dollar sign", "$notavar"},
+			{"backticks", "`echo hi`"},
+			{"glob", "[abc]*"},
+			{"semicolon", "a; echo injected"},
+			{"pipe", "a | cat"},
+			{"command substitution", "$(cat /etc/passwd)"},
+			{"backslash", `\`},
+			{"empty", ""},
+		}
+	)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := command.Read(
@@ -374,7 +380,7 @@ func TestMachineEnvVarsQuoted_Unix_Mock(t *testing.T) {
 	if len(calls) != 1 {
 		t.Fatalf("expected exactly one call, got %d", len(calls))
 	}
-	found := false
+	var found bool
 	for _, arg := range calls[0].Args {
 		if arg == "MSG='has space'" {
 			found = true

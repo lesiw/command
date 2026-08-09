@@ -163,8 +163,10 @@ func TestParsePOSIXReadDir(t *testing.T) {
 	opts := cmp.AllowUnexported(dirEntry{}, fileInfo{})
 	for _, tt := range posixReadDirTests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := strings.NewReader(tt.input)
-			var got []dirEntry
+			var (
+				r   = strings.NewReader(tt.input)
+				got []dirEntry
+			)
 			for entry, err := range posixWalkEntries(r) {
 				if err != nil {
 					t.Fatalf("posixWalkEntries() error = %v", err)

@@ -204,12 +204,14 @@ func buildContainer(
 		return
 	}
 	if insperr == nil {
-		var ctime time.Time
-		outStr := strings.TrimSpace(string(out))
+		var (
+			ctime  time.Time
+			outStr = strings.TrimSpace(string(out))
+		)
 		ctime, err = time.Parse(time.RFC3339, outStr)
 		if err != nil {
 			err = fmt.Errorf(
-				"failed to parse container timestamp %q: %s",
+				"failed to parse container timestamp %q: %w",
 				outStr, err)
 			return
 		}

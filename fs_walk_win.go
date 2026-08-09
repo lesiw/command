@@ -21,8 +21,10 @@ func (cfs *cmdFS) walkWindows(
 	ctx context.Context, root string, depth int,
 ) iter.Seq2[fs.DirEntry, error] {
 	return func(yield func(fs.DirEntry, error) bool) {
-		script := strings.ReplaceAll(psWalkScript, "{PATH}", root)
-		depthStr := "unlimited"
+		var (
+			script   = strings.ReplaceAll(psWalkScript, "{PATH}", root)
+			depthStr = "unlimited"
+		)
 		if depth > 0 {
 			depthStr = strconv.Itoa(depth - 1)
 		}
@@ -74,15 +76,12 @@ func windowsWalkEntries(r io.Reader) iter.Seq2[*dirEntry, error] {
 				continue
 			}
 
-			var (
-				name       = fields[0]
-				sizeOrType = fields[1]
-				mtimeStr   = fields[2]
-				fullPath   = fields[3]
-
-				dir  = sizeOrType == "DIR"
-				size int64
-			)
+			name := fields[0]
+			sizeOrType := fields[1]
+			mtimeStr := fields[2]
+			fullPath := fields[3]
+			dir := sizeOrType == "DIR"
+			var size int64
 
 			if name == "." || name == ".." {
 				continue

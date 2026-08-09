@@ -183,8 +183,10 @@ func isHelperSig(
 
 	// Pattern 1: (ctx context.Context, param ParamType, ...)
 	if params.Len() >= 2 {
-		firstParam := params.At(0)
-		secondParam := params.At(1)
+		var (
+			firstParam  = params.At(0)
+			secondParam = params.At(1)
+		)
 
 		// Check if first is context.Context and second matches paramType
 		if isContextType(firstParam.Type()) &&
@@ -238,11 +240,10 @@ func extractFuncInfo(
 	}
 
 	imports := make(map[string]struct{})
-	var params, args []string
-	var results []string
+	var params, args, results []string
 
 	// Detect if this is a ctx-based function
-	hasCtx := false
+	var hasCtx bool
 	skipCount := 1 // Default: skip only param
 
 	if sig.Params().Len() >= 2 && isContextType(sig.Params().At(0).Type()) {
@@ -262,8 +263,10 @@ func extractFuncInfo(
 
 	// Extract remaining params
 	for i := skipCount; i < sig.Params().Len(); i++ {
-		param := sig.Params().At(i)
-		typStr := types.TypeString(param.Type(), qf)
+		var (
+			param  = sig.Params().At(i)
+			typStr = types.TypeString(param.Type(), qf)
+		)
 
 		collectImports(param.Type(), imports)
 
@@ -280,8 +283,10 @@ func extractFuncInfo(
 
 	// Extract return types
 	for i := 0; i < sig.Results().Len(); i++ {
-		result := sig.Results().At(i)
-		typStr := types.TypeString(result.Type(), qf)
+		var (
+			result = sig.Results().At(i)
+			typStr = types.TypeString(result.Type(), qf)
+		)
 
 		// Swap Machine return type with *Sh
 		if typStr == "Machine" {
@@ -293,17 +298,17 @@ func extractFuncInfo(
 	}
 
 	// Build param/result strings
-	paramStr := ""
+	var paramStr string
 	if len(params) > 0 {
 		paramStr = ", " + strings.Join(params, ", ")
 	}
 
-	argsStr := ""
+	var argsStr string
 	if len(args) > 0 {
 		argsStr = ", " + strings.Join(args, ", ")
 	}
 
-	resultsStr := ""
+	var resultsStr string
 	returnStmt := "return "
 	if len(results) == 0 {
 		returnStmt = ""
@@ -327,7 +332,7 @@ func extractFuncInfo(
 		docLines = append(docLines, "")
 
 		// Add reference
-		pkgPrefix := ""
+		var pkgPrefix string
 		if cfg.FixLinks {
 			pkgPrefix = cfg.SourcePkg + "."
 		}
@@ -389,11 +394,11 @@ func collectImports(t types.Type, imports map[string]struct{}) {
 	case *types.Chan:
 		collectImports(t.Elem(), imports)
 	case *types.Signature:
-		for i := 0; i < t.Params().Len(); i++ {
-			collectImports(t.Params().At(i).Type(), imports)
+		for v := range t.Params().Variables() {
+			collectImports(v.Type(), imports)
 		}
-		for i := 0; i < t.Results().Len(); i++ {
-			collectImports(t.Results().At(i).Type(), imports)
+		for v := range t.Results().Variables() {
+			collectImports(v.Type(), imports)
 		}
 	}
 }

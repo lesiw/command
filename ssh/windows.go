@@ -75,8 +75,10 @@ func psNativeEscape(s string) string {
 // psEncode encodes a script for PowerShell's -EncodedCommand flag,
 // which expects base64-encoded UTF-16LE.
 func psEncode(script string) string {
-	codes := utf16.Encode([]rune(script))
-	b := make([]byte, len(codes)*2)
+	var (
+		codes = utf16.Encode([]rune(script))
+		b     = make([]byte, len(codes)*2)
+	)
 	for i, c := range codes {
 		b[i*2] = byte(c)
 		b[i*2+1] = byte(c >> 8)

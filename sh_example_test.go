@@ -387,8 +387,10 @@ func ExampleSh_Read() {
 }
 
 func ExampleSh_Command() {
-	ctx, sh := context.Background(), command.Shell(mem.Machine(), "tr")
-	var buf strings.Builder
+	var (
+		ctx, sh = context.Background(), command.Shell(mem.Machine(), "tr")
+		buf     strings.Builder
+	)
 	_, err := command.Copy(
 		&buf,
 		strings.NewReader("hello world"),
@@ -403,8 +405,10 @@ func ExampleSh_Command() {
 }
 
 func ExampleSh_Unshell() {
-	ctx := context.Background()
-	sh := command.Shell(mem.Machine())
+	var (
+		ctx = context.Background()
+		sh  = command.Shell(mem.Machine())
+	)
 	sh = sh.Handle("tr", sh.Unshell())
 	var buf strings.Builder
 	_, err := command.Copy(
@@ -421,8 +425,10 @@ func ExampleSh_Unshell() {
 }
 
 func ExampleSh_CreateBuffer() {
-	ctx := context.Background()
-	sh := command.Shell(mem.Machine(), "echo")
+	var (
+		ctx = context.Background()
+		sh  = command.Shell(mem.Machine(), "echo")
+	)
 
 	_, err := io.Copy(
 		sh.CreateBuffer(ctx, "output.txt"),

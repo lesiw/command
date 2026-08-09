@@ -3,7 +3,6 @@
 package sys_test
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,7 +14,7 @@ import (
 )
 
 func TestWorkDirRelative(t *testing.T) {
-	m, ctx := sys.Machine(), context.Background()
+	m, ctx := sys.Machine(), t.Context()
 
 	tmpDir := t.TempDir()
 	subDir := filepath.Join(tmpDir, "subdir")

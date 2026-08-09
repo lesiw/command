@@ -116,9 +116,10 @@ func Exec(ctx context.Context, m Machine, args ...string) error {
 //
 // If the command fails, the error will contain an exit code and log output.
 func Read(ctx context.Context, m Machine, args ...string) (string, error) {
-	r := m.Command(ctx, args...)
-
-	var buf bytes.Buffer
+	var (
+		r   = m.Command(ctx, args...)
+		buf bytes.Buffer
+	)
 	if logger, ok := r.(LogBuffer); ok {
 		logger.Log(&buf)
 	}
@@ -143,9 +144,10 @@ func Read(ctx context.Context, m Machine, args ...string) (string, error) {
 //
 // If the command fails, the error will contain exit code and log output.
 func Do(ctx context.Context, m Machine, args ...string) error {
-	r := m.Command(ctx, args...)
-
-	var buf bytes.Buffer
+	var (
+		r   = m.Command(ctx, args...)
+		buf bytes.Buffer
+	)
 	if logger, ok := r.(LogBuffer); ok {
 		logger.Log(&buf)
 	}

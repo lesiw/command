@@ -116,8 +116,10 @@ var dosEntryPattern = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}`)
 
 func dosDirEntries(r io.Reader, basePath string) iter.Seq2[*dirEntry, error] {
 	return func(yield func(*dirEntry, error) bool) {
-		scanner := bufio.NewScanner(r)
-		var line string
+		var (
+			scanner = bufio.NewScanner(r)
+			line    string
+		)
 
 		for scanner.Scan() {
 			if line = scanner.Text(); !dosEntryPattern.MatchString(line) {
@@ -129,14 +131,11 @@ func dosDirEntries(r io.Reader, basePath string) iter.Seq2[*dirEntry, error] {
 				continue
 			}
 
-			var (
-				mtimeStr = strings.Join(fields[0:3], " ")
-				sizeStr  = fields[3]
-				filename = strings.Join(fields[4:], " ")
-
-				dir  bool
-				size int64
-			)
+			mtimeStr := strings.Join(fields[0:3], " ")
+			sizeStr := fields[3]
+			filename := strings.Join(fields[4:], " ")
+			var dir bool
+			var size int64
 
 			if sizeStr == "<DIR>" {
 				dir = true

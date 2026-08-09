@@ -26,8 +26,10 @@ func callSuffix(calls []mock.Call, suffix []string) bool {
 }
 
 func TestCtl(t *testing.T) {
-	m := new(mock.Machine)
-	ctl := Ctl(m)
+	var (
+		m   = new(mock.Machine)
+		ctl = Ctl(m)
+	)
 
 	if err := command.Do(t.Context(), ctl, "true"); err != nil {
 		t.Fatalf("command.Do error: %v", err)
@@ -39,8 +41,10 @@ func TestCtl(t *testing.T) {
 }
 
 func TestCtlFindsDocker(t *testing.T) {
-	m := new(mock.Machine)
-	ctl := Ctl(m)
+	var (
+		m   = new(mock.Machine)
+		ctl = Ctl(m)
+	)
 
 	err := command.Do(t.Context(), ctl, "container", "run", "alpine")
 	if err != nil {
@@ -133,8 +137,10 @@ func TestMachineUsesRunningContainer(t *testing.T) {
 }
 
 func TestMachineShutdownBeforeInit(t *testing.T) {
-	m := new(mock.Machine)
-	ctr := Machine(m, "alpine")
+	var (
+		m   = new(mock.Machine)
+		ctr = Machine(m, "alpine")
+	)
 
 	if err := command.Shutdown(t.Context(), ctr); err != nil {
 		t.Fatalf("command.Shutdown error: %v", err)

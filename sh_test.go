@@ -12,15 +12,15 @@ import (
 )
 
 func TestShellConcurrentUse(t *testing.T) {
-	ctx := t.Context()
-	sh := command.Shell(mem.Machine())
+	var (
+		ctx = t.Context()
+		sh  = command.Shell(mem.Machine())
+	)
 	sh.Handle("echo", mem.Machine())
 
 	var wg sync.WaitGroup
 	for range 32 {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			_ = sh.OS(ctx)
 			_ = sh.Arch(ctx)
 			_ = sh.FS()
@@ -28,13 +28,13 @@ func TestShellConcurrentUse(t *testing.T) {
 			if err != nil {
 				t.Errorf("Read: %v", err)
 			}
-		}()
+		})
 	}
 	wg.Wait()
 }
 
 func TestShellBasic(t *testing.T) {
-	ctx, sh := context.Background(), command.Shell(mem.Machine())
+	ctx, sh := t.Context(), command.Shell(mem.Machine())
 	sh.Handle("echo", mem.Machine())
 	out, err := sh.Read(ctx, "echo", "hello")
 	if err != nil {
@@ -53,11 +53,13 @@ func TestShellBasic(t *testing.T) {
 }
 
 func TestShellMultipleRoutes(t *testing.T) {
-	ctx := context.Background()
-	m1, m2 := mem.Machine(), mem.Machine()
-	sh := command.Shell(mem.Machine()).
-		Handle("echo", m1).
-		Handle("cat", m2)
+	var (
+		ctx    = context.Background()
+		m1, m2 = mem.Machine(), mem.Machine()
+		sh     = command.Shell(mem.Machine()).
+			Handle("echo", m1).
+			Handle("cat", m2)
+	)
 	out, err := sh.Read(ctx, "echo", "test")
 	if err != nil {
 		t.Fatalf("echo failed: %v", err)
@@ -73,7 +75,7 @@ func TestShellMultipleRoutes(t *testing.T) {
 }
 
 func TestHandleCreateShell(t *testing.T) {
-	ctx, m := context.Background(), mem.Machine()
+	ctx, m := t.Context(), mem.Machine()
 	m = command.Handle(m, "echo", mem.Machine())
 	out, err := command.Read(ctx, m, "echo", "registered")
 	if err != nil {
@@ -92,11 +94,13 @@ func TestHandleCreateShell(t *testing.T) {
 }
 
 func TestHandleExistingShell(t *testing.T) {
-	ctx := context.Background()
-	m1, m2 := mem.Machine(), mem.Machine()
-	sh := command.Shell(mem.Machine()).
-		Handle("echo", m1).
-		Handle("cat", m2)
+	var (
+		ctx    = context.Background()
+		m1, m2 = mem.Machine(), mem.Machine()
+		sh     = command.Shell(mem.Machine()).
+			Handle("echo", m1).
+			Handle("cat", m2)
+	)
 	out, err := sh.Read(ctx, "echo", "from m1")
 	if err != nil {
 		t.Fatalf("echo failed: %v", err)
@@ -108,7 +112,7 @@ func TestHandleExistingShell(t *testing.T) {
 }
 
 func TestHandleChaining(t *testing.T) {
-	ctx, m := context.Background(), mem.Machine()
+	ctx, m := t.Context(), mem.Machine()
 	m = command.Handle(m, "echo", mem.Machine())
 	m = command.Handle(m, "tee", mem.Machine())
 	out, err := command.Read(ctx, m, "echo", "test")
@@ -125,7 +129,7 @@ func TestHandleChaining(t *testing.T) {
 }
 
 func TestHandleFuncBasic(t *testing.T) {
-	ctx, m := context.Background(), mem.Machine()
+	ctx, m := t.Context(), mem.Machine()
 	m = command.HandleFunc(m, "echo",
 		func(ctx context.Context, args ...string) command.Buffer {
 			m := mem.Machine()
@@ -144,15 +148,17 @@ func TestHandleFuncBasic(t *testing.T) {
 }
 
 func TestHandleFuncWithFunc(t *testing.T) {
-	ctx := context.Background()
-	greeter := command.MachineFunc(
-		func(ctx context.Context, args ...string) command.Buffer {
-			if len(args) > 1 {
-				return strings.NewReader("Hello, " + args[1])
-			}
-			return strings.NewReader("Hello, World")
-		})
-	m := command.Handle(mem.Machine(), "greet", greeter)
+	var (
+		ctx     = context.Background()
+		greeter = command.MachineFunc(
+			func(ctx context.Context, args ...string) command.Buffer {
+				if len(args) > 1 {
+					return strings.NewReader("Hello, " + args[1])
+				}
+				return strings.NewReader("Hello, World")
+			})
+		m = command.Handle(mem.Machine(), "greet", greeter)
+	)
 	out, err := command.Read(ctx, m, "greet", "Alice")
 	if err != nil {
 		t.Fatalf("greet failed: %v", err)
@@ -163,9 +169,11 @@ func TestHandleFuncWithFunc(t *testing.T) {
 }
 
 func TestUnshellBasic(t *testing.T) {
-	ctx, core := t.Context(), mem.Machine()
-	shell := command.Shell(core)
-	unshelled := command.Unshell(shell)
+	var (
+		ctx, core = t.Context(), mem.Machine()
+		shell     = command.Shell(core)
+		unshelled = command.Unshell(shell)
+	)
 	out, err := command.Read(ctx, unshelled, "echo", "hello")
 	if err != nil {
 		t.Fatal(err)
@@ -180,10 +188,12 @@ func TestUnshellBasic(t *testing.T) {
 }
 
 func TestUnshellNested(t *testing.T) {
-	core := mem.Machine()
-	shell1 := command.Shell(core)
-	shell2 := command.Shell(shell1)
-	unshelled := command.Unshell(shell2)
+	var (
+		core      = mem.Machine()
+		shell1    = command.Shell(core)
+		shell2    = command.Shell(shell1)
+		unshelled = command.Unshell(shell2)
+	)
 	if unshelled != shell1 {
 		t.Error("Unshell(shell2) should return shell1")
 	}
@@ -213,54 +223,60 @@ func TestUnshellWhitelisting(t *testing.T) {
 }
 
 func TestProbesOS_PiercesShell(t *testing.T) {
-	ctx := t.Context()
-	core := command.MachineFunc(func(
-		_ context.Context, args ...string,
-	) command.Buffer {
-		if len(args) == 2 && args[0] == "uname" && args[1] == "-s" {
-			return strings.NewReader("Linux\n")
-		}
-		return command.Fail(&command.Error{
-			Err: fmt.Errorf("command not found: %s", args[0]),
+	var (
+		ctx  = t.Context()
+		core = command.MachineFunc(func(
+			_ context.Context, args ...string,
+		) command.Buffer {
+			if len(args) == 2 && args[0] == "uname" && args[1] == "-s" {
+				return strings.NewReader("Linux\n")
+			}
+			return command.Fail(&command.Error{
+				Err: fmt.Errorf("command not found: %s", args[0]),
+			})
 		})
-	})
-	sh := command.Shell(core)
+		sh = command.Shell(core)
+	)
 	if got, want := command.OS(ctx, sh), "linux"; got != want {
 		t.Errorf("OS() should pierce Shell, got %q, want %q", got, want)
 	}
 }
 
 func TestProbesArch_PiercesShell(t *testing.T) {
-	ctx := t.Context()
-	core := command.MachineFunc(func(
-		_ context.Context, args ...string,
-	) command.Buffer {
-		if len(args) == 2 && args[0] == "uname" && args[1] == "-m" {
-			return strings.NewReader("x86_64\n")
-		}
-		return command.Fail(&command.Error{
-			Err: fmt.Errorf("command not found: %s", args[0]),
+	var (
+		ctx  = t.Context()
+		core = command.MachineFunc(func(
+			_ context.Context, args ...string,
+		) command.Buffer {
+			if len(args) == 2 && args[0] == "uname" && args[1] == "-m" {
+				return strings.NewReader("x86_64\n")
+			}
+			return command.Fail(&command.Error{
+				Err: fmt.Errorf("command not found: %s", args[0]),
+			})
 		})
-	})
-	sh := command.Shell(core)
+		sh = command.Shell(core)
+	)
 	if got, want := command.Arch(ctx, sh), "amd64"; got != want {
 		t.Errorf("Arch() should pierce Shell, got %q, want %q", got, want)
 	}
 }
 
 func TestProbesEnv_PiercesShell(t *testing.T) {
-	ctx := t.Context()
-	core := command.MachineFunc(func(
-		_ context.Context, args ...string,
-	) command.Buffer {
-		if len(args) == 2 && args[0] == "printenv" && args[1] == "HOME" {
-			return strings.NewReader("/\n")
-		}
-		return command.Fail(&command.Error{
-			Err: fmt.Errorf("command not found: %s", args[0]),
+	var (
+		ctx  = t.Context()
+		core = command.MachineFunc(func(
+			_ context.Context, args ...string,
+		) command.Buffer {
+			if len(args) == 2 && args[0] == "printenv" && args[1] == "HOME" {
+				return strings.NewReader("/\n")
+			}
+			return command.Fail(&command.Error{
+				Err: fmt.Errorf("command not found: %s", args[0]),
+			})
 		})
-	})
-	sh := command.Shell(core)
+		sh = command.Shell(core)
+	)
 	// Env() should call printenv on sh.m, not sh itself.
 	if got, want := command.Env(ctx, sh, "HOME"), "/"; got != want {
 		t.Errorf("Env() should pierce Shell, got %q, want %q", got, want)

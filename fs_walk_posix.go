@@ -45,8 +45,10 @@ func (cfs *cmdFS) walkPOSIX(
 
 func posixWalkEntries(r io.Reader) iter.Seq2[*dirEntry, error] {
 	return func(yield func(*dirEntry, error) bool) {
-		scanner := bufio.NewScanner(r)
-		var line string
+		var (
+			scanner = bufio.NewScanner(r)
+			line    string
+		)
 
 		for scanner.Scan() {
 			if line = strings.TrimSpace(scanner.Text()); line == "" {
@@ -58,13 +60,11 @@ func posixWalkEntries(r io.Reader) iter.Seq2[*dirEntry, error] {
 				continue
 			}
 
-			var (
-				permissions = fields[0]
-				sizeStr     = fields[4]
-				timeStr     = strings.Join(fields[5:8], " ")
-				fullPath    = strings.Join(fields[8:], " ")
-				baseName    = path.Base(fullPath)
-			)
+			permissions := fields[0]
+			sizeStr := fields[4]
+			timeStr := strings.Join(fields[5:8], " ")
+			fullPath := strings.Join(fields[8:], " ")
+			baseName := path.Base(fullPath)
 
 			if baseName == "." || baseName == ".." {
 				continue

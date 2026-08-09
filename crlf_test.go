@@ -44,8 +44,10 @@ func TestCRLFReaderWithMixed(t *testing.T) {
 }
 
 func TestCRLFReaderWithSplitCRLF(t *testing.T) {
-	r := iotest.OneByteReader(strings.NewReader("test\r\ndata"))
-	wrapped := crlfReader(io.NopCloser(r))
+	var (
+		r       = iotest.OneByteReader(strings.NewReader("test\r\ndata"))
+		wrapped = crlfReader(io.NopCloser(r))
+	)
 	if got, err := io.ReadAll(wrapped); err != nil {
 		t.Errorf("ReadAll() error = %v", err)
 	} else if want := "test\ndata"; string(got) != want {
@@ -54,8 +56,10 @@ func TestCRLFReaderWithSplitCRLF(t *testing.T) {
 }
 
 func TestCRLFReaderClose(t *testing.T) {
-	var closed closeTracker
-	wrapped := crlfReader(&closed)
+	var (
+		closed  closeTracker
+		wrapped = crlfReader(&closed)
+	)
 	if err := wrapped.Close(); err != nil {
 		t.Errorf("Close() error = %v", err)
 	}

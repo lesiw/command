@@ -50,14 +50,16 @@ transform 1
 }
 
 func TestCopySuccessNoError(t *testing.T) {
-	var buf bytes.Buffer
-	src := strings.NewReader("data")
-	pr, pw := io.Pipe()
-	fil := struct {
-		io.Reader
-		io.Writer
-		io.Closer
-	}{pr, pw, pw}
+	var (
+		buf    bytes.Buffer
+		src    = strings.NewReader("data")
+		pr, pw = io.Pipe()
+		fil    = struct {
+			io.Reader
+			io.Writer
+			io.Closer
+		}{pr, pw, pw}
+	)
 
 	n, err := Copy(&buf, src, fil)
 	if err != nil {

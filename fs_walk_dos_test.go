@@ -184,8 +184,10 @@ var dosReadDirTests = []struct {
 func TestParseDOSReadDir(t *testing.T) {
 	for _, tt := range dosReadDirTests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := strings.NewReader(tt.input)
-			var got []dirEntry
+			var (
+				r   = strings.NewReader(tt.input)
+				got []dirEntry
+			)
 			for entry, err := range dosDirEntries(r, "") {
 				if err != nil {
 					t.Fatalf("parser error = %v", err)
