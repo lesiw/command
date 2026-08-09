@@ -37,6 +37,7 @@ require (
 )
 
 tool (
+	golang.org/x/tools/cmd/goimports
 	lesiw.io/tools/cmd/clerk
 	lesiw.io/tools/cmd/fmt
 	lesiw.io/tools/cmd/vet
