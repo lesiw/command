@@ -5,7 +5,6 @@ package ctr
 import (
 	"context"
 	"crypto/sha1"
-	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -27,7 +26,7 @@ var (
 		{"lima", "nerdctl"},
 	}
 
-	errShutdown = errors.New("machine shut down")
+	errShutdown = fmt.Errorf("machine shut down")
 )
 
 type ctlMachine struct {

@@ -17,10 +17,11 @@ func TestMachineConcurrentPipeline(t *testing.T) {
 		m.Return(strings.NewReader("FILTERED\n"), "filter")
 
 		var result strings.Builder
-		if _, err := command.Copy(&result,
+		_, err := command.Copy(&result,
 			strings.NewReader("input\n"),
 			command.NewFilter(ctx, m, "filter"),
-		); err != nil {
+		)
+		if err != nil {
 			t.Fatal(err)
 		}
 

@@ -54,7 +54,7 @@ func TestShellBasic(t *testing.T) {
 
 func TestShellMultipleRoutes(t *testing.T) {
 	var (
-		ctx    = context.Background()
+		ctx    = t.Context()
 		m1, m2 = mem.Machine(), mem.Machine()
 		sh     = command.Shell(mem.Machine()).
 			Handle("echo", m1).
@@ -95,7 +95,7 @@ func TestHandleCreateShell(t *testing.T) {
 
 func TestHandleExistingShell(t *testing.T) {
 	var (
-		ctx    = context.Background()
+		ctx    = t.Context()
 		m1, m2 = mem.Machine(), mem.Machine()
 		sh     = command.Shell(mem.Machine()).
 			Handle("echo", m1).
@@ -149,7 +149,7 @@ func TestHandleFuncBasic(t *testing.T) {
 
 func TestHandleFuncWithFunc(t *testing.T) {
 	var (
-		ctx     = context.Background()
+		ctx     = t.Context()
 		greeter = command.MachineFunc(
 			func(ctx context.Context, args ...string) command.Buffer {
 				if len(args) > 1 {

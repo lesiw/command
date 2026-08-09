@@ -63,7 +63,8 @@ func sortkeys[K cmp.Ordered, V any](m map[K]V) []K {
 	return keys
 }
 
-// String returns a shell command string with environment variables and arguments.
+// String returns a shell command string with environment variables
+// and arguments.
 func String(env map[string]string, arg ...string) Stringer {
 	var ret strings.Builder
 	for _, k := range sortkeys(env) {

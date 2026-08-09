@@ -24,16 +24,18 @@ type nopCloser struct{}
 func (nopCloser) Close() error { return nil }
 
 func TestWriterWrite(t *testing.T) {
-	buf := new(bytes.Buffer)
-	w := NewWriter(t.Context(), MachineFunc(func(
-		context.Context, ...string,
-	) Buffer {
-		return struct {
-			io.Reader
-			io.Writer
-			io.Closer
-		}{strings.NewReader(""), buf, nopCloser{}}
-	}))
+	var (
+		buf = new(bytes.Buffer)
+		w   = NewWriter(t.Context(), MachineFunc(func(
+			context.Context, ...string,
+		) Buffer {
+			return struct {
+				io.Reader
+				io.Writer
+				io.Closer
+			}{strings.NewReader(""), buf, nopCloser{}}
+		}))
+	)
 	closeOnCleanup(t, w)
 	if n, err := w.Write([]byte("hello world")); err != nil {
 		t.Fatalf("Write() error = %v", err)
@@ -47,11 +49,11 @@ func TestWriterWrite(t *testing.T) {
 
 func TestWriterNoOpIfUnused(t *testing.T) {
 	var (
-		cmdCtx context.Context
-		w      = NewWriter(t.Context(), MachineFunc(func(
+		ctxs = make(chan context.Context, 1)
+		w    = NewWriter(t.Context(), MachineFunc(func(
 			ctx context.Context, _ ...string,
 		) Buffer {
-			cmdCtx = ctx
+			ctxs <- ctx
 			return struct {
 				io.Reader
 				io.Writer
@@ -63,12 +65,14 @@ func TestWriterNoOpIfUnused(t *testing.T) {
 	if err := w.Close(); err != nil {
 		t.Errorf("Close() error = %v", err)
 	}
-	if cmdCtx != nil {
+	select {
+	case ctx := <-ctxs:
 		select {
-		case <-cmdCtx.Done():
+		case <-ctx.Done():
 			t.Error("context was canceled even though writer was unused")
 		default:
 		}
+	default:
 	}
 }
 

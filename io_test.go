@@ -3,6 +3,7 @@ package command
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -13,8 +14,8 @@ import (
 
 func TestCopyErrorCollection(t *testing.T) {
 	var (
-		errRead       = errors.New("read failed")
-		errProcessing = errors.New("processing failed")
+		errRead       = fmt.Errorf("read failed")
+		errProcessing = fmt.Errorf("processing failed")
 
 		src  = &readStringer{iotest.ErrReader(errRead), "source reader"}
 		mid1 = namedRW("transform 1")

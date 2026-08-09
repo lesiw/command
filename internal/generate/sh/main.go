@@ -186,8 +186,9 @@ func isHelperSig(sig *types.Signature, paramTypeName string, pkg *types.Package)
 		)
 
 		// Check if first is context.Context and second matches paramType
-		if isContextType(firstParam.Type()) &&
-			types.Identical(secondParam.Type(), paramType) {
+		match := isContextType(firstParam.Type()) &&
+			types.Identical(secondParam.Type(), paramType)
+		if match {
 			return true
 		}
 	}
@@ -275,11 +276,8 @@ func extractFuncInfo(fn *types.Func, cfg *Config, pkg *packages.Package) FuncInf
 	}
 
 	// Extract return types
-	for i := 0; i < sig.Results().Len(); i++ {
-		var (
-			result = sig.Results().At(i)
-			typStr = types.TypeString(result.Type(), qf)
-		)
+	for result := range sig.Results().Variables() {
+		typStr := types.TypeString(result.Type(), qf)
 
 		// Swap Machine return type with *Sh
 		if typStr == "Machine" {

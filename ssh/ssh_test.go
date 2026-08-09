@@ -164,13 +164,14 @@ func TestMachineEnvVars_Windows_Mock(t *testing.T) {
 	}
 
 	script := psDecode(t, args[len(args)-1])
-	for _, w := range []string{
+	wants := []string{
 		"$ErrorActionPreference = 'Stop'\n",
 		"$env:BAZ = 'qux'\n",
 		"$env:FOO = 'bar'\n",
 		"& 'printenv.exe' 'FOO'\n",
 		"exit $LASTEXITCODE\n",
-	} {
+	}
+	for _, w := range wants {
 		if !strings.Contains(script, w) {
 			t.Errorf("script missing %q:\n%s", w, script)
 		}

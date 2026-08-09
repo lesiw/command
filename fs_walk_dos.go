@@ -77,8 +77,9 @@ func (cfs *cmdFS) walkDOSDir(ctx context.Context, root string, item dosQueueItem
 	defer r.Close()
 
 	basePath := item.path
-	if !strings.HasSuffix(basePath, "\\") &&
-		!strings.HasSuffix(basePath, "/") {
+	slashed := strings.HasSuffix(basePath, "\\") ||
+		strings.HasSuffix(basePath, "/")
+	if !slashed {
 		basePath += "\\"
 	}
 

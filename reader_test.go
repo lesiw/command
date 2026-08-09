@@ -23,11 +23,11 @@ func TestReaderRead(t *testing.T) {
 
 func TestReaderCancelOnClose(t *testing.T) {
 	var (
-		cmdCtx context.Context
-		r      = NewReader(t.Context(), MachineFunc(func(
+		ctxs = make(chan context.Context, 1)
+		r    = NewReader(t.Context(), MachineFunc(func(
 			ctx context.Context, _ ...string,
 		) Buffer {
-			cmdCtx = ctx
+			ctxs <- ctx
 			return strings.NewReader("data")
 		}))
 	)
@@ -38,8 +38,9 @@ func TestReaderCancelOnClose(t *testing.T) {
 	if err := r.Close(); err != nil {
 		t.Errorf("Close() error = %v", err)
 	}
+	ctx := <-ctxs
 	select {
-	case <-cmdCtx.Done():
+	case <-ctx.Done():
 	default:
 		t.Error("Close() did not cancel context")
 	}
@@ -47,11 +48,11 @@ func TestReaderCancelOnClose(t *testing.T) {
 
 func TestReaderNoOpIfUnused(t *testing.T) {
 	var (
-		cmdCtx context.Context
-		r      = NewReader(t.Context(), MachineFunc(func(
+		ctxs = make(chan context.Context, 1)
+		r    = NewReader(t.Context(), MachineFunc(func(
 			ctx context.Context, _ ...string,
 		) Buffer {
-			cmdCtx = ctx
+			ctxs <- ctx
 			return strings.NewReader("data")
 		}))
 	)
@@ -59,12 +60,14 @@ func TestReaderNoOpIfUnused(t *testing.T) {
 	if err := r.Close(); err != nil {
 		t.Errorf("Close() error = %v", err)
 	}
-	if cmdCtx != nil {
+	select {
+	case ctx := <-ctxs:
 		select {
-		case <-cmdCtx.Done():
+		case <-ctx.Done():
 			t.Error("context was canceled even though reader was unused")
 		default:
 		}
+	default:
 	}
 }
 

@@ -14,10 +14,11 @@ import (
 )
 
 func TestWorkDirRelative(t *testing.T) {
-	m, ctx := sys.Machine(), t.Context()
-
-	tmpDir := t.TempDir()
-	subDir := filepath.Join(tmpDir, "subdir")
+	var (
+		m, ctx = sys.Machine(), t.Context()
+		tmpDir = t.TempDir()
+		subDir = filepath.Join(tmpDir, "subdir")
+	)
 	if err := os.Mkdir(subDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}

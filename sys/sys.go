@@ -206,7 +206,7 @@ func (c *cmd) Close() error {
 	return nil
 }
 
-func (c *cmd) Read(bytes []byte) (int, error) {
+func (c *cmd) Read(bytes []byte) (n int, err error) {
 	if err := c.start(); err != nil {
 		return 0, err
 	}
@@ -214,8 +214,6 @@ func (c *cmd) Read(bytes []byte) (int, error) {
 		n   int
 		err error
 	})
-	var n int
-	var err error
 	if c.reader == nil {
 		err = io.EOF
 		goto skipread

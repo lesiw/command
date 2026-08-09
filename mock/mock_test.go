@@ -54,9 +54,10 @@ func TestMachineQueueRepeatsLast(t *testing.T) {
 }
 
 func TestMachineNoQueueReturnsEmpty(t *testing.T) {
-	m, ctx := new(mock.Machine), t.Context()
-
-	var want string
+	var (
+		m, ctx = new(mock.Machine), t.Context()
+		want   string
+	)
 	if got, err := command.Read(ctx, m, "foo"); err != nil {
 		t.Fatalf("expected quiet success, got error: %v", err)
 	} else if got != want {
@@ -118,7 +119,7 @@ func TestMachineTracksInput(t *testing.T) {
 
 func TestMachineTracksEnvironment(t *testing.T) {
 	var (
-		ctx = command.WithEnv(context.Background(), map[string]string{
+		ctx = command.WithEnv(t.Context(), map[string]string{
 			"FOO": "bar",
 			"BAZ": "qux",
 		})
