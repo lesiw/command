@@ -1,6 +1,6 @@
 module lesiw.io/command
 
-go 1.24.7
+go 1.25.0
 
 require (
 	github.com/Antonboom/errname v1.1.1
