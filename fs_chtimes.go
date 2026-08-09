@@ -10,9 +10,7 @@ import (
 
 var _ fs.ChtimesFS = (*cmdFS)(nil)
 
-func (cfs *cmdFS) Chtimes(
-	ctx context.Context, name string, atime, mtime time.Time,
-) (err error) {
+func (cfs *cmdFS) Chtimes(ctx context.Context, name string, atime, mtime time.Time) (err error) {
 	if atime.IsZero() && mtime.IsZero() {
 		return nil
 	}

@@ -88,7 +88,8 @@ func generate(cfg *Config) error {
 	}
 	if len(pkgs[0].Errors) > 0 {
 		return fmt.Errorf("errors loading %s: %v",
-			cfg.SourcePkg, pkgs[0].Errors)
+			cfg.SourcePkg, pkgs[0].Errors,
+		)
 	}
 
 	pkg := pkgs[0]
@@ -164,11 +165,7 @@ func generate(cfg *Config) error {
 // isHelperSig checks if a function signature matches the helper pattern:
 // - Pattern 1: (ctx context.Context, param ParamType, ...)
 // - Pattern 2: (param ParamType, ...) for non-ctx functions
-func isHelperSig(
-	sig *types.Signature,
-	paramTypeName string,
-	pkg *types.Package,
-) bool {
+func isHelperSig(sig *types.Signature, paramTypeName string, pkg *types.Package) bool {
 	params := sig.Params()
 	if params.Len() < 1 {
 		return false
@@ -224,11 +221,7 @@ type FuncInfo struct {
 	Imports    map[string]struct{}
 }
 
-func extractFuncInfo(
-	fn *types.Func,
-	cfg *Config,
-	pkg *packages.Package,
-) FuncInfo {
+func extractFuncInfo(fn *types.Func, cfg *Config, pkg *packages.Package) FuncInfo {
 	sig := fn.Signature()
 
 	// Create qualifier for type strings

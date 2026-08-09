@@ -12,9 +12,7 @@ func psScript(statements ...string) string {
 	return strings.Join(statements, ";")
 }
 
-func psRead(
-	ctx context.Context, m Machine, script string, a ...any,
-) (string, error) {
+func psRead(ctx context.Context, m Machine, script string, a ...any) (string, error) {
 	return Read(ctx, m, "powershell",
 		"-NonInteractive",
 		"-InputFormat", "None",
@@ -22,9 +20,7 @@ func psRead(
 	)
 }
 
-func psDo(
-	ctx context.Context, m Machine, script string, a ...any,
-) error {
+func psDo(ctx context.Context, m Machine, script string, a ...any) error {
 	return Do(ctx, m, "powershell",
 		"-NonInteractive",
 		"-InputFormat", "None",
@@ -34,9 +30,7 @@ func psDo(
 
 // psReader returns an io.ReadCloser for PowerShell commands that only
 // read output. Uses -InputFormat None since stdin is not needed.
-func psReader(
-	ctx context.Context, m Machine, script string, a ...any,
-) io.ReadCloser {
+func psReader(ctx context.Context, m Machine, script string, a ...any) io.ReadCloser {
 	cmd := fmt.Sprintf(script, a...)
 	return NewReader(ctx, m, "powershell",
 		"-NonInteractive",
@@ -48,24 +42,15 @@ func psReader(
 // psWriter returns an io.WriteCloser for PowerShell commands that
 // accept stdin input. Does NOT use -InputFormat None so that $input
 // and stdin streams work correctly.
-func psWriter(
-	ctx context.Context, m Machine, script string, a ...any,
-) io.WriteCloser {
+func psWriter(ctx context.Context, m Machine, script string, a ...any) io.WriteCloser {
 	cmd := fmt.Sprintf(script, a...)
-	return NewWriter(ctx, m, "powershell",
-		"-NonInteractive",
-		"-Command", cmd,
-	)
+	return NewWriter(ctx, m, "powershell", "-NonInteractive", "-Command", cmd)
 }
 
-func dosReader(
-	ctx context.Context, m Machine, args ...string,
-) io.ReadCloser {
+func dosReader(ctx context.Context, m Machine, args ...string) io.ReadCloser {
 	return crlfReader(NewReader(ctx, m, args...))
 }
 
-func dosWriter(
-	ctx context.Context, m Machine, args ...string,
-) io.WriteCloser {
+func dosWriter(ctx context.Context, m Machine, args ...string) io.WriteCloser {
 	return NewWriter(ctx, m, args...)
 }

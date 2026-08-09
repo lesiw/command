@@ -47,9 +47,7 @@ type machine struct {
 	arch string
 }
 
-func (sm *machine) Command(
-	ctx context.Context, args ...string,
-) command.Buffer {
+func (sm *machine) Command(ctx context.Context, args ...string) command.Buffer {
 	sm.init(ctx)
 	if sm.os == "windows" {
 		return sm.windowsCommand(ctx, args...)

@@ -35,7 +35,8 @@ func TestWorkDirRelative(t *testing.T) {
 
 	ctx = fs.WithWorkDir(ctx, "subdir")
 	out, err := command.Read(ctx, m, "powershell", "-NoProfile",
-		"-Command", "Get-Location")
+		"-Command", "Get-Location",
+	)
 	if err != nil {
 		t.Fatalf("Read(Get-Location): %v", err)
 	}
@@ -68,7 +69,8 @@ func TestWorkDirUnixStyle(t *testing.T) {
 
 	ctx = fs.WithWorkDir(ctx, "subdir/nested")
 	out, err := command.Read(ctx, m, "powershell", "-NoProfile",
-		"-Command", "Get-Location")
+		"-Command", "Get-Location",
+	)
 	if err != nil {
 		t.Fatalf("Read(Get-Location): %v", err)
 	}

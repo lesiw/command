@@ -17,9 +17,7 @@ import (
 //go:embed walk.ps1
 var psWalkScript string
 
-func (cfs *cmdFS) walkWindows(
-	ctx context.Context, root string, depth int,
-) iter.Seq2[fs.DirEntry, error] {
+func (cfs *cmdFS) walkWindows(ctx context.Context, root string, depth int) iter.Seq2[fs.DirEntry, error] {
 	return func(yield func(fs.DirEntry, error) bool) {
 		var (
 			script   = strings.ReplaceAll(psWalkScript, "{PATH}", root)

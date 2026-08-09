@@ -9,18 +9,14 @@ import (
 
 var _ fs.LocalizeFS = (*cmdFS)(nil)
 
-func (cfs *cmdFS) Localize(
-	ctx context.Context, name string,
-) (result string, err error) {
+func (cfs *cmdFS) Localize(ctx context.Context, name string) (result string, err error) {
 	if err = cfs.init(ctx); err != nil {
 		return "", err
 	}
 	return localize(ctx, cfs.kind, name)
 }
 
-func localize(
-	_ context.Context, kind cfsKind, name string,
-) (string, error) {
+func localize(_ context.Context, kind cfsKind, name string) (string, error) {
 	switch kind {
 	case kindGNU, kindBSD:
 		// Unix paths are already in the correct format.

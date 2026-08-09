@@ -83,7 +83,8 @@ func TestCallFailure(t *testing.T) {
 	t.Setenv("CMD_TEST_PROC", "1")
 
 	out, err := command.Read(ctx, m, testBinary(t),
-		"-test.run=TestCallFailure")
+		"-test.run=TestCallFailure",
+	)
 	if err == nil {
 		t.Errorf("Read().error = <nil>, want error")
 	}

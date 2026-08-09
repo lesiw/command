@@ -10,9 +10,7 @@ import (
 
 var _ fs.AppendFS = (*cmdFS)(nil)
 
-func (cfs *cmdFS) Append(
-	ctx context.Context, name string,
-) (wc io.WriteCloser, err error) {
+func (cfs *cmdFS) Append(ctx context.Context, name string) (wc io.WriteCloser, err error) {
 	if err = cfs.init(ctx); err != nil {
 		return nil, err
 	}

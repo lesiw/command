@@ -9,9 +9,7 @@ import (
 
 var _ fs.DirFS = (*cmdFS)(nil)
 
-func (cfs *cmdFS) OpenDir(
-	ctx context.Context, dir string,
-) (io.ReadCloser, error) {
+func (cfs *cmdFS) OpenDir(ctx context.Context, dir string) (io.ReadCloser, error) {
 	if err := cfs.init(ctx); err != nil {
 		return nil, err
 	}

@@ -86,10 +86,7 @@ func Shell(core Machine, commands ...string) *Sh {
 
 // init detects and caches OS and Arch on first use.
 func (sh *Sh) init(ctx context.Context) {
-	sh.once.Do(func() {
-		sh.os = OS(ctx, sh.m)
-		sh.arch = Arch(ctx, sh.m)
-	})
+	sh.once.Do(func() { sh.os = OS(ctx, sh.m); sh.arch = Arch(ctx, sh.m) })
 }
 
 // OS returns the operating system type for this shell.
@@ -140,10 +137,7 @@ func (sh *Sh) Handle(command string, machine Machine) *Sh {
 // HandleFunc registers a function to handle the specified command.
 // This is a convenience wrapper around Handle for function handlers.
 // Returns the shell for method chaining.
-func (sh *Sh) HandleFunc(
-	command string,
-	fn func(context.Context, ...string) Buffer,
-) *Sh {
+func (sh *Sh) HandleFunc(command string, fn func(context.Context, ...string) Buffer) *Sh {
 	return sh.Handle(command, MachineFunc(fn))
 }
 
@@ -175,9 +169,7 @@ func (sh *Sh) Unshell() Machine {
 // command is the shared routing logic used by both Command() and fallback.
 // If fallback is true, unregistered commands fall back to the inner machine.
 // If fallback is false, unregistered commands return NotFoundError.
-func (sh *Sh) command(
-	ctx context.Context, fallback bool, args ...string,
-) Buffer {
+func (sh *Sh) command(ctx context.Context, fallback bool, args ...string) Buffer {
 	if len(args) == 0 {
 		return Fail(fmt.Errorf("no command specified"))
 	}
@@ -194,9 +186,7 @@ func (sh *Sh) command(
 		return sh.m.Command(ctx, args...)
 	}
 
-	return Fail(&Error{
-		Err: fmt.Errorf("command not found: %s", cmdName),
-	})
+	return Fail(&Error{Err: fmt.Errorf("command not found: %s", cmdName)})
 }
 
 // MachineFunc is an adapter to allow ordinary functions to be used as
@@ -261,10 +251,6 @@ func Handle(m Machine, command string, handler Machine) Machine {
 //	    func(ctx context.Context, args ...string) Buffer {
 //	        return customMachine.Command(ctx, args...)
 //	    })
-func HandleFunc(
-	m Machine,
-	command string,
-	fn func(context.Context, ...string) Buffer,
-) Machine {
+func HandleFunc(m Machine, command string, fn func(context.Context, ...string) Buffer) Machine {
 	return Handle(m, command, MachineFunc(fn))
 }

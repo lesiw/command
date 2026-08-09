@@ -13,9 +13,7 @@ import (
 
 var _ fs.StatFS = (*cmdFS)(nil)
 
-func (cfs *cmdFS) Stat(
-	ctx context.Context, name string,
-) (fs.FileInfo, error) {
+func (cfs *cmdFS) Stat(ctx context.Context, name string) (fs.FileInfo, error) {
 	if err := cfs.init(ctx); err != nil {
 		return nil, err
 	}

@@ -18,9 +18,7 @@ import (
 // configurable and unknown to the client, so no in-band quoting
 // reliably survives it; the base64 channel contains no characters for
 // any shell to interpret.
-func (sm *machine) windowsCommand(
-	ctx context.Context, args ...string,
-) command.Buffer {
+func (sm *machine) windowsCommand(ctx context.Context, args ...string) command.Buffer {
 	var script strings.Builder
 	// Stop makes failures terminate the script: without it, a failed
 	// Set-Location would leave the command running in the wrong

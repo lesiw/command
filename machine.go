@@ -197,9 +197,7 @@ func trace(buf Buffer, args ...string) {
 //   - The command succeeds
 //   - The command fails with a non-NotFound error
 //   - The machine doesn't implement Unsheller (reached bottom layer)
-func probeRead(
-	ctx context.Context, m Machine, args ...string,
-) (output string, err error) {
+func probeRead(ctx context.Context, m Machine, args ...string) (output string, err error) {
 	for {
 		output, err = Read(ctx, m, args...)
 		if err == nil || !NotFound(err) {

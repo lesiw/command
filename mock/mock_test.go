@@ -523,7 +523,8 @@ func TestPipelineInputNeverLost(t *testing.T) {
 		m.Return(strings.NewReader("out"), "cmd")
 		var result strings.Builder
 		_, err := command.Copy(&result, strings.NewReader("in"),
-			command.NewFilter(t.Context(), m, "cmd"))
+			command.NewFilter(t.Context(), m, "cmd"),
+		)
 		if err != nil {
 			t.Fatal(err)
 		}

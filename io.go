@@ -37,9 +37,7 @@ var (
 //
 // The fil stages must be both readable and writable (io.ReadWriter). Use
 // NewFilter() to wrap Buffer instances for use in pipelines.
-func Copy(
-	dst io.Writer, src io.Reader, fil ...io.ReadWriter,
-) (written int64, err error) {
+func Copy(dst io.Writer, src io.Reader, fil ...io.ReadWriter) (written int64, err error) {
 	var (
 		g       errgroup.Group
 		r       io.Reader

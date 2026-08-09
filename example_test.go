@@ -45,9 +45,7 @@ func ExampleRead() {
 
 func ExampleWithEnv() {
 	ctx, m := context.Background(), mem.Machine()
-	ctx = command.WithEnv(ctx, map[string]string{
-		"HOME": "/home/mem",
-	})
+	ctx = command.WithEnv(ctx, map[string]string{"HOME": "/home/mem"})
 	fmt.Println("HOME:", command.Env(ctx, m, "HOME"))
 	// Output:
 	// HOME: /home/mem

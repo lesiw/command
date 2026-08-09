@@ -22,6 +22,7 @@ type closeTracker bool
 
 func (*closeTracker) Read(p []byte) (int, error)  { return 0, io.EOF }
 func (*closeTracker) Write(p []byte) (int, error) { return len(p), nil }
+
 func (c *closeTracker) Close() error {
 	*c = true
 	return nil

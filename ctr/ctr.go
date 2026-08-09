@@ -62,9 +62,7 @@ func (m *ctlMachine) doInit(ctx context.Context) (command.Machine, error) {
 	return sub.Machine(m.host, ctrcli...), nil
 }
 
-func (m *ctlMachine) Command(
-	ctx context.Context, arg ...string,
-) command.Buffer {
+func (m *ctlMachine) Command(ctx context.Context, arg ...string) command.Buffer {
 	ctl, err := m.init(ctx)
 	if err != nil {
 		return command.Fail(err)
@@ -85,9 +83,7 @@ func (m *ctlMachine) Command(
 //
 //	m := ctr.Machine(sys.Machine(), "alpine")
 //	m := ctr.Machine(sys.Machine(), "./Containerfile", "-v", "/data:/data")
-func Machine(
-	m command.Machine, name string, args ...string,
-) command.Machine {
+func Machine(m command.Machine, name string, args ...string) command.Machine {
 	return &machine{host: m, name: name, args: args}
 }
 
@@ -182,9 +178,7 @@ func (m *machine) Shutdown(ctx context.Context) error {
 	return command.Do(ctx, m.Machine, "container", "rm", "-f", m.name)
 }
 
-func buildContainer(
-	ctx context.Context, m command.Machine, rpath string,
-) (image string, err error) {
+func buildContainer(ctx context.Context, m command.Machine, rpath string) (image string, err error) {
 	var path string
 	if path, err = filepath.Abs(rpath); err != nil {
 		err = fmt.Errorf("bad Containerfile path %q: %w", rpath, err)
@@ -212,7 +206,8 @@ func buildContainer(
 		if err != nil {
 			err = fmt.Errorf(
 				"failed to parse container timestamp %q: %w",
-				outStr, err)
+				outStr, err,
+			)
 			return
 		}
 		if ctime.Unix() > mtime {

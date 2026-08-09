@@ -1,8 +1,6 @@
 package command
 
-import (
-	"lesiw.io/fs"
-)
+import "lesiw.io/fs"
 
 func toDirEntry(e fs.DirEntry) dirEntry {
 	info, _ := e.Info()

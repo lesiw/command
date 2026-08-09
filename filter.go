@@ -18,9 +18,7 @@ import (
 // NewFilter is primarily useful with command.Copy for pipeline composition.
 // For most use cases, prefer NewReader (read-only with cancellation) or
 // NewWriter (write-only with completion wait).
-func NewFilter(
-	ctx context.Context, m Machine, args ...string,
-) io.ReadWriteCloser {
+func NewFilter(ctx context.Context, m Machine, args ...string) io.ReadWriteCloser {
 	buf := m.Command(ctx, args...)
 	return &filter{buf: buf}
 }

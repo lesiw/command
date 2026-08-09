@@ -9,9 +9,7 @@ import (
 
 var _ fs.TruncateFS = (*cmdFS)(nil)
 
-func (cfs *cmdFS) Truncate(
-	ctx context.Context, name string, size int64,
-) (err error) {
+func (cfs *cmdFS) Truncate(ctx context.Context, name string, size int64) (err error) {
 	if err = cfs.init(ctx); err != nil {
 		return
 	}

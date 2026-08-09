@@ -316,9 +316,7 @@ func TestMachineArgQuoting(t *testing.T) {
 	)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := command.Read(
-				t.Context(), sshm, "printf", "%s", tt.arg,
-			)
+			got, err := command.Read(t.Context(), sshm, "printf", "%s", tt.arg)
 			if err != nil {
 				t.Errorf("command.Read(printf, %%s, %q) err: %v", tt.arg, err)
 			}
@@ -357,8 +355,7 @@ func TestPSNativeEscape(t *testing.T) {
 	}}
 	for _, tt := range tests {
 		if got := psNativeEscape(tt.in); got != tt.want {
-			t.Errorf("psNativeEscape(%q) = %q, want %q",
-				tt.in, got, tt.want)
+			t.Errorf("psNativeEscape(%q) = %q, want %q", tt.in, got, tt.want)
 		}
 	}
 }

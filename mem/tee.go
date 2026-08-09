@@ -28,9 +28,7 @@ func (t *teeReader) Read(p []byte) (n int, err error) {
 	return n, err
 }
 
-func teeCommand(
-	ctx context.Context, m *machine, args ...string,
-) command.Buffer {
+func teeCommand(ctx context.Context, m *machine, args ...string) command.Buffer {
 	// Open all output files
 	var (
 		writers = make([]io.Writer, 0, len(args)-1)

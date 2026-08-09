@@ -9,9 +9,7 @@ import (
 
 var _ fs.ChownFS = (*cmdFS)(nil)
 
-func (cfs *cmdFS) Chown(
-	ctx context.Context, name string, uid, gid int,
-) (err error) {
+func (cfs *cmdFS) Chown(ctx context.Context, name string, uid, gid int) (err error) {
 	if max(uid, gid) < 0 {
 		return nil
 	}

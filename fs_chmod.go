@@ -9,9 +9,7 @@ import (
 
 var _ fs.ChmodFS = (*cmdFS)(nil)
 
-func (cfs *cmdFS) Chmod(
-	ctx context.Context, name string, mode fs.Mode,
-) (err error) {
+func (cfs *cmdFS) Chmod(ctx context.Context, name string, mode fs.Mode) (err error) {
 	if err = cfs.init(ctx); err != nil {
 		return
 	}

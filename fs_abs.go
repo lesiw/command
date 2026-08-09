@@ -16,9 +16,7 @@ func (cfs *cmdFS) Abs(ctx context.Context, name string) (string, error) {
 	return abs(ctx, cfs.Machine, cfs.kind, name)
 }
 
-func abs(
-	ctx context.Context, m Machine, kind cfsKind, name string,
-) (string, error) {
+func abs(ctx context.Context, m Machine, kind cfsKind, name string) (string, error) {
 	dir := path.IsDir(name) // Remember if input is a directory.
 
 	// Join with WorkDir if provided and path is relative.
@@ -50,7 +48,8 @@ func abs(
 		}
 	case kindWindows:
 		real, err := psRead(ctx, m,
-			"(Resolve-Path -Path '%s' -ErrorAction Stop).Path", name)
+			"(Resolve-Path -Path '%s' -ErrorAction Stop).Path", name,
+		)
 		if err != nil {
 			return name, nil
 		} else if real == "" && dir {

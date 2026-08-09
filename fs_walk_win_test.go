@@ -26,12 +26,9 @@ var windowsWalkEntriesTests = []struct {
 	name: "mixed files and directories",
 	input: windowsWalkInput([][]string{
 		{"file1.txt", "50", "2024-11-21T10:30:00Z",
-			`C:\test\file1.txt`},
-		{"subdir", "DIR", "2025-01-15T08:45:00Z",
-			`C:\test\subdir`},
-		{"file2.txt", "100", "2023-12-31T23:59:59Z",
-			`C:\test\file2.txt`},
-	}),
+			`C:\test\file1.txt`}, {"subdir", "DIR", "2025-01-15T08:45:00Z",
+			`C:\test\subdir`}, {"file2.txt", "100", "2023-12-31T23:59:59Z",
+			`C:\test\file2.txt`}}),
 	want: []dirEntry{{
 		name: "file1.txt",
 		dir:  false,
@@ -73,10 +70,8 @@ var windowsWalkEntriesTests = []struct {
 	name: "only files",
 	input: windowsWalkInput([][]string{
 		{"test.txt", "100", "2024-03-10T00:00:00Z",
-			`C:\test\test.txt`},
-		{"data.json", "200", "2024-04-20T00:00:00Z",
-			`C:\test\data.json`},
-	}),
+			`C:\test\test.txt`}, {"data.json", "200", "2024-04-20T00:00:00Z",
+			`C:\test\data.json`}}),
 	want: []dirEntry{{
 		name: "test.txt",
 		dir:  false,
@@ -110,8 +105,7 @@ var windowsWalkEntriesTests = []struct {
 	name: "filename with spaces",
 	input: windowsWalkInput([][]string{
 		{"file with spaces.txt", "50", "2024-05-05T00:00:00Z",
-			`C:\test\file with spaces.txt`},
-	}),
+			`C:\test\file with spaces.txt`}}),
 	want: []dirEntry{{
 		name: "file with spaces.txt",
 		dir:  false,
@@ -129,12 +123,9 @@ var windowsWalkEntriesTests = []struct {
 	name: "single-digit days",
 	input: windowsWalkInput([][]string{
 		{"epoch.txt", "100", "1970-01-01T00:00:00Z",
-			`C:\test\epoch.txt`},
-		{"recent.txt", "200", "2009-02-02T15:04:00Z",
-			`C:\test\recent.txt`},
-		{"testdir", "DIR", "2024-03-09T00:00:00Z",
-			`C:\test\testdir`},
-	}),
+			`C:\test\epoch.txt`}, {"recent.txt", "200", "2009-02-02T15:04:00Z",
+			`C:\test\recent.txt`}, {"testdir", "DIR", "2024-03-09T00:00:00Z",
+			`C:\test\testdir`}}),
 	want: []dirEntry{{
 		name: "epoch.txt",
 		dir:  false,

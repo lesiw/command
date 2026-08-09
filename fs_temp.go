@@ -20,9 +20,7 @@ func (cfs *cmdFS) TempDir(ctx context.Context, prefix string) (string, error) {
 	return cfs.temp(ctx, prefix, true)
 }
 
-func (cfs *cmdFS) temp(
-	ctx context.Context, prefix string, dir bool,
-) (out string, err error) {
+func (cfs *cmdFS) temp(ctx context.Context, prefix string, dir bool) (out string, err error) {
 	if err := cfs.init(ctx); err != nil {
 		return "", err
 	}
@@ -44,9 +42,7 @@ func (cfs *cmdFS) temp(
 				"mktemp", "-d", "-t", cmp.Or(prefix, "tmp"),
 			)
 		} else {
-			out, err = Read(
-				ctx, cfs, "mktemp", "-t", cmp.Or(prefix, "tmp"),
-			)
+			out, err = Read(ctx, cfs, "mktemp", "-t", cmp.Or(prefix, "tmp"))
 		}
 	case kindWindows:
 		if dir {

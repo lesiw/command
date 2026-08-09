@@ -9,9 +9,7 @@ import (
 
 var _ fs.AppendDirFS = (*cmdFS)(nil)
 
-func (cfs *cmdFS) AppendDir(
-	ctx context.Context, dir string,
-) (io.WriteCloser, error) {
+func (cfs *cmdFS) AppendDir(ctx context.Context, dir string) (io.WriteCloser, error) {
 	if err := cfs.init(ctx); err != nil {
 		return nil, err
 	}

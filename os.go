@@ -112,9 +112,7 @@ func detectArch(ctx context.Context, m Machine) string {
 		return mapArchitecture(strings.TrimSpace(out))
 	}
 
-	out, err = probeRead(ctx, m,
-		"cmd", "/c", "echo %PROCESSOR_ARCHITECTURE%",
-	)
+	out, err = probeRead(ctx, m, "cmd", "/c", "echo %PROCESSOR_ARCHITECTURE%")
 	if err == nil {
 		// Windows OpenSSH servers can mangle this invocation's quoting,
 		// so only trust the probe when it maps to a known architecture.

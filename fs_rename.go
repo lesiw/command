@@ -8,9 +8,7 @@ import (
 
 var _ fs.RenameFS = (*cmdFS)(nil)
 
-func (cfs *cmdFS) Rename(
-	ctx context.Context, oldname, newname string,
-) (err error) {
+func (cfs *cmdFS) Rename(ctx context.Context, oldname, newname string) (err error) {
 	if err = cfs.init(ctx); err != nil {
 		return
 	}

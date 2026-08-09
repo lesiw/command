@@ -190,9 +190,7 @@ func (m *Machine) Return(reader io.Reader, arg ...string) {
 
 // makeQueueHandler creates a handler function that manages the queue for
 // the given argument pattern.
-func (m *Machine) makeQueueHandler(arg []string) func(
-	context.Context, ...string,
-) command.Buffer {
+func (m *Machine) makeQueueHandler(arg []string) func(context.Context, ...string) command.Buffer {
 	return func(ctx context.Context, args ...string) command.Buffer {
 		m.mu.Lock()
 
@@ -262,9 +260,7 @@ func (m *Machine) makeQueueHandler(arg []string) func(
 //	m.Do(func(_ context.Context, args ...string) command.Buffer {
 //	    return command.FromReader(strings.NewReader("Linux\n"))
 //	}, "uname", "-s")
-func (m *Machine) Do(
-	fn func(context.Context, ...string) command.Buffer, arg ...string,
-) {
+func (m *Machine) Do(fn func(context.Context, ...string) command.Buffer, arg ...string) {
 	m.init()
 	m.mu.Lock()
 	defer m.mu.Unlock()

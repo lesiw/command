@@ -14,9 +14,7 @@ import (
 	"lesiw.io/fs/path"
 )
 
-func (cfs *cmdFS) walkPOSIX(
-	ctx context.Context, root string, depth int,
-) iter.Seq2[fs.DirEntry, error] {
+func (cfs *cmdFS) walkPOSIX(ctx context.Context, root string, depth int) iter.Seq2[fs.DirEntry, error] {
 	return func(yield func(fs.DirEntry, error) bool) {
 		args := []string{"find", root}
 		if depth > 0 {

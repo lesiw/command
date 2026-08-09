@@ -14,9 +14,7 @@ type nopClose struct{}
 
 func (nopClose) Close() error { return nil }
 
-func catCommand(
-	ctx context.Context, m *machine, args ...string,
-) command.Buffer {
+func catCommand(ctx context.Context, m *machine, args ...string) command.Buffer {
 	// No args: read from stdin.
 	if len(args) == 1 {
 		return struct {

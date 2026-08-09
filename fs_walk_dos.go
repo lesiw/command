@@ -19,9 +19,7 @@ type dosQueueItem struct {
 	level int
 }
 
-func (cfs *cmdFS) walkDOS(
-	ctx context.Context, root string, depth int,
-) iter.Seq2[fs.DirEntry, error] {
+func (cfs *cmdFS) walkDOS(ctx context.Context, root string, depth int) iter.Seq2[fs.DirEntry, error] {
 	return func(yield func(fs.DirEntry, error) bool) {
 		queue := []dosQueueItem{{path: root, level: 1}}
 		for len(queue) > 0 {
@@ -41,15 +39,8 @@ func (cfs *cmdFS) walkDOS(
 	}
 }
 
-func (cfs *cmdFS) walkDOSDir(
-	ctx context.Context,
-	root string,
-	item dosQueueItem,
-	yield func(fs.DirEntry, error) bool,
-) (dirs []dosQueueItem, ok bool) {
-	_, err := Read(
-		ctx, cfs, "cmd", "/c", "dir", "/ad", item.path,
-	)
+func (cfs *cmdFS) walkDOSDir(ctx context.Context, root string, item dosQueueItem, yield func(fs.DirEntry, error) bool) (dirs []dosQueueItem, ok bool) {
+	_, err := Read(ctx, cfs, "cmd", "/c", "dir", "/ad", item.path)
 	if err != nil {
 		// Not a directory - stat it and yield as a file.
 		// But skip if this IS the root (we don't yield root itself).

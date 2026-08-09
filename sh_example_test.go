@@ -33,9 +33,7 @@ func ExampleSh_Arch() {
 
 func ExampleSh_Env() {
 	ctx := context.Background()
-	ctx = command.WithEnv(ctx, map[string]string{
-		"MY_VAR": "test_value",
-	})
+	ctx = command.WithEnv(ctx, map[string]string{"MY_VAR": "test_value"})
 	sh := command.Shell(mem.Machine())
 	val := sh.Env(ctx, "MY_VAR")
 	fmt.Println(val)

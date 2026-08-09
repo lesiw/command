@@ -9,9 +9,7 @@ import (
 
 var _ fs.FS = (*cmdFS)(nil)
 
-func (cfs *cmdFS) Open(
-	ctx context.Context, name string,
-) (rc io.ReadCloser, err error) {
+func (cfs *cmdFS) Open(ctx context.Context, name string) (rc io.ReadCloser, err error) {
 	if err = cfs.init(ctx); err != nil {
 		return nil, err
 	}
